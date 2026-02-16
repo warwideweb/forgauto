@@ -1272,3 +1272,11 @@ body.dark {
     color: var(--muted);
     margin-bottom: 24px;
 }
+
+/* Form field error */
+.field-error {
+    color: #ef4444;
+    font-size: 12px;
+    margin-top: 6px;
+    font-weight: 600;
+}

@@ -56,8 +56,14 @@ function loginWithGoogle() {
 
 function updateNavAuth() {
     const loginBtn = document.getElementById('loginBtn');
-    if (currentUser) {
+    if (currentUser && currentUser.name) {
         loginBtn.textContent = currentUser.name.split(' ')[0];
+        loginBtn.onclick = () => go('dashboard');
+    } else if (currentUser && currentUser.email) {
+        loginBtn.textContent = currentUser.email.split('@')[0];
+        loginBtn.onclick = () => go('dashboard');
+    } else if (currentUser) {
+        loginBtn.textContent = 'Account';
         loginBtn.onclick = () => go('dashboard');
     } else {
         loginBtn.textContent = 'Login';
@@ -167,10 +173,15 @@ async function loadParts() {
         if (filter) params.set('search', filter);
         
         const data = await api(`/api/parts?${params}`);
-        parts = data.length ? data : demoParts;
+        // Always include demo parts for a full-looking marketplace
+        // Real user parts will have higher IDs and appear first
+        const realParts = data || [];
+        // Mark demo parts and combine (demo parts have IDs 1-8)
+        const markedDemos = demoParts.map(p => ({...p, isDemo: true, seller_name: 'ForgAuto Sample'}));
+        parts = [...realParts, ...markedDemos];
     } catch (e) {
         console.log('Using demo data:', e.message);
-        parts = demoParts;
+        parts = demoParts.map(p => ({...p, isDemo: true, seller_name: 'ForgAuto Sample'}));
     }
 }
 
@@ -686,7 +697,7 @@ function homeView() {
 
         <div class="stats-bar">
             <div class="stat"><span class="stat-num">${parts.length}</span><span class="stat-label">${parts.length === 1 ? 'Part' : 'Parts'} Listed</span></div>
-            <div class="stat"><span class="stat-num">${designers.length}</span><span class="stat-label">${designers.length === 1 ? 'Designer' : 'Designers'}</span></div>
+            <div class="stat"><span class="stat-num">${demoDesigners.length}</span><span class="stat-label">${demoDesigners.length === 1 ? 'Designer' : 'Designers'}</span></div>
             <div class="stat"><span class="stat-num">${carMakes.length - 1}</span><span class="stat-label">Car Brands</span></div>
             <div class="stat"><span class="stat-num">$5</span><span class="stat-label">Flat Fee</span></div>
         </div>
@@ -728,16 +739,12 @@ function browseView() {
 }
 
 function designersView() {
-    // Filter out invalid designers (no name, undefined bio, etc.)
-    const validDesigners = designers.filter(d => d.name && d.name !== 'undefined' && d.avatar_url && d.avatar_url.startsWith('http'));
+    // Filter out invalid designers - if none valid, use demo data
+    let validDesigners = designers.filter(d => d.name && d.name !== 'undefined' && d.avatar_url && d.avatar_url.startsWith('http'));
     
+    // Fall back to demo designers if API returned garbage
     if (validDesigners.length === 0) {
-        return `<div class="page-header"><h1>Find a Designer</h1><p>Need a custom part? Work with automotive specialists.</p></div>
-            <div class="empty-state" style="text-align:center;padding:60px 20px;">
-                <h3>No designers yet</h3>
-                <p style="color:var(--muted);margin:12px 0 24px;">Are you a 3D designer? Join our platform.</p>
-                <a href="mailto:designers@forgauto.com" class="btn btn-primary">Apply to be a Designer</a>
-            </div>`;
+        validDesigners = demoDesigners;
     }
     
     return `<div class="page-header"><h1>Find a Designer</h1><p>Need a custom part? Work with automotive specialists.</p></div>
@@ -809,13 +816,26 @@ function handleFileSelect(e) {
 async function handleCreateListing(e) {
     e.preventDefault();
     
-    // Validate BOTH file and photos required
-    const missingItems = [];
-    if (!uploadedFile) missingItems.push('3D File (STL/STEP/OBJ)');
-    if (uploadedPhotos.length === 0) missingItems.push('At least 1 photo');
+    // Clear previous errors
+    document.querySelectorAll('.field-error').forEach(el => el.remove());
     
-    if (missingItems.length > 0) {
-        alert('MISSING INFO:\n\n' + missingItems.map(m => '• ' + m).join('\n') + '\n\nBoth a 3D file AND photos are required to create a listing.');
+    // Validate BOTH file and photos required
+    const errors = [];
+    if (!uploadedFile) errors.push({field: 'fileInput', msg: '3D file is required'});
+    if (uploadedPhotos.length === 0) errors.push({field: 'photoInput', msg: 'At least 1 photo is required'});
+    
+    if (errors.length > 0) {
+        errors.forEach(err => {
+            const field = document.getElementById(err.field);
+            if (field && field.parentElement) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'field-error';
+                errorDiv.textContent = err.msg;
+                field.parentElement.appendChild(errorDiv);
+            }
+        });
+        // Also show alert as backup
+        alert('Missing required fields:\n\n' + errors.map(e => '• ' + e.msg).join('\n'));
         return;
     }
     
