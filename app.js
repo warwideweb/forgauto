@@ -1,7 +1,7 @@
 // ForgAuto — 3D Marketplace for Cars
 // Version: 3.0 - Full Backend Integration
 
-const VERSION = '3.0';
+const VERSION = '3.1';
 const API_URL = 'https://forgauto-api.warwideweb.workers.dev'; // Cloudflare Worker API
 
 // State

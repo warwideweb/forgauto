@@ -1,100 +1,134 @@
-# ForgAuto — 3D Marketplace for Automotive Parts
+# ForgAuto v3.1
 
-![Version](https://img.shields.io/badge/version-3.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+The 3D marketplace for automotive parts. Buy and sell STL files for your car.
 
-**The marketplace for 3D printable car parts. $5 listing fee, 0% commission.**
-
-🌐 **Live:** https://forgauto.com  
-📦 **API:** https://forgauto-api.warwideweb.workers.dev  
-⚙️ **Admin:** https://forgauto.com/admin.html
-
----
-
-## Version History
-
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0 | 2026-02-16 | Initial deployment |
-| 1.5 | 2026-02-16 | Google OAuth, profile photos |
-| 2.0 | 2026-02-16 | Messaging, password recovery, admin panel |
-| 2.1 | 2026-02-16 | Featured designers/shops, reviews |
-| 2.2 | 2026-02-16 | Browser history, Google OAuth fix |
-| 2.3 | 2026-02-16 | Navigation fixes, part update fix |
-| **3.0** | 2026-02-16 | **Major Update:** 70+ car makes, photo required, Non-Specific option, card click fix |
+**Live Site:** https://forgauto.com  
+**API:** https://forgauto-api.warwideweb.workers.dev
 
 ---
 
 ## Features
 
 ### For Buyers
-- 🔍 Search 70+ car makes and models
-- 🎨 3D model preview
-- 💬 Message sellers directly
-- ⭐ Reviews and ratings
-- 🏭 Find local print shops
+- Browse 3D printable car parts by make, model, and category
+- 3D model preview (spin/zoom) before purchase
+- Instant digital download after payment
+- Find local print shops for Print & Ship service
+- Hire designers for custom parts
 
 ### For Sellers
-- 📤 Upload 3D files + photos (thumbnail required)
-- 💰 **$5 flat listing fee, keep 100% of sales**
-- 📊 Sales dashboard
-- 🌟 Featured listings (+$10/30 days)
-- 🚗 70+ car makes or "Non-Specific" for universal parts
+- $5 flat listing fee (keep 100% of sales)
+- No monthly fees, no commission
+- Listings never expire
+- Optional $10 Featured placement (30 days)
+- Optional $20 Boost to Premier (30 days)
 
 ### Platform
-- 🔐 Google OAuth + Email login
-- 🔑 Password recovery
-- 👤 Profile photos
-- 💬 Built-in messaging
-- 📱 Mobile responsive
-- ⚙️ Admin panel
-- ↩️ Browser back button support
-
----
-
-## Supported Car Makes (70+)
-
-Acura, Alfa Romeo, Aston Martin, Audi, Bentley, BMW, Bugatti, Buick, Cadillac, Chevrolet, Chrysler, Citroën, Dacia, Daewoo, Daihatsu, Dodge, Ferrari, Fiat, Ford, Genesis, GMC, Honda, Hummer, Hyundai, Infiniti, Isuzu, Jaguar, Jeep, Kia, Koenigsegg, Lamborghini, Lancia, Land Rover, Lexus, Lincoln, Lotus, Maserati, Mazda, McLaren, Mercedes-Benz, Mercury, MG, Mini, Mitsubishi, Nissan, Oldsmobile, Opel, Pagani, Peugeot, Plymouth, Polestar, Pontiac, Porsche, Ram, Renault, Rivian, Rolls-Royce, Saab, Saturn, Scion, Seat, Skoda, Smart, Subaru, Suzuki, Tesla, Toyota, Triumph, Vauxhall, Volkswagen, Volvo
-
-**+ "Non-Specific"** for universal parts (hides make/model fields)
-
----
-
-## Pricing
-
-| Feature | Price | Duration |
-|---------|-------|----------|
-| Part Listing | $5 | Forever |
-| Featured Part | +$10 | 30 days |
-| Featured Designer | $100 | 30 days |
-| Featured Print Shop | $150 | 30 days |
-| Commission | 0% | - |
+- 70+ car makes supported
+- 6 categories: Interior, Exterior, Gauges, Accessories, Performance, Lighting
+- Google OAuth login
+- Responsive design (mobile-friendly)
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | Vanilla JS, CSS3 |
-| API | Cloudflare Workers v3.0 |
-| Database | Cloudflare D1 (SQLite) |
-| Storage | Cloudflare R2 |
-| Auth | Google OAuth 2.0 + Email |
-| Hosting | GitHub Pages |
+**Frontend:**
+- Vanilla JavaScript (no framework)
+- Three.js for 3D STL viewing
+- CSS custom properties for theming
+- GitHub Pages hosting
+
+**Backend:**
+- Cloudflare Workers (API)
+- Cloudflare D1 (SQLite database)
+- Cloudflare R2 (file storage)
 
 ---
 
-## Deployment
+## Version History
 
-```bash
-# Frontend
-cd PartForge && git push
+### v3.1 (Feb 17, 2026)
+- Fixed Hire Designer page (shows sample designers)
+- Fixed form validation (red error messages)
+- Fixed user display name in nav
+- Fixed stats count accuracy
+- Added sample listings for full marketplace look
+- Added DMCA page
+- Removed fake purchase ticker
+- Removed misleading trust badges
+- Browse sidebar uses dropdowns instead of long lists
+- Dark favicon added
 
-# API
-cd worker && npx wrangler deploy
+### v3.0 (Feb 16, 2026)
+- Boost to Premier feature ($20)
+- Required file + photo uploads
+- Incomplete listing warnings (red badges)
+- Part detail fetches from API first
+- Premiered Parts section (paid placement)
+
+### v2.0 (Feb 16, 2026)
+- Full marketplace launch
+- Google OAuth integration
+- 3D STL viewer
+- Print shop directory
+- Designer profiles
+- Messaging system
+
+---
+
+## Files
+
+```
+/
+├── index.html      # Main app shell
+├── app.js          # All JavaScript (SPA router, views, API)
+├── style.css       # All styles
+├── privacy.html    # Privacy policy
+├── terms.html      # Terms of service
+├── dmca.html       # DMCA takedown procedures
+├── favicon.svg     # Dark theme favicon
+└── README.md       # This file
 ```
 
 ---
 
-*Built by Error by Human • 2026*
+## API Endpoints
+
+### Auth
+- `GET /api/auth/google` - Google OAuth redirect
+- `GET /api/auth/me` - Get current user
+
+### Parts
+- `GET /api/parts` - List parts (filters: category, make, model, search, user)
+- `GET /api/parts/:id` - Get single part with images/reviews
+- `POST /api/parts` - Create listing (auth required)
+- `PUT /api/parts/:id` - Update listing (owner only)
+- `DELETE /api/parts/:id` - Delete listing (owner only)
+- `POST /api/parts/:id/purchase` - Purchase part
+- `POST /api/parts/:id/boost` - Boost to Premier ($20)
+- `POST /api/parts/:id/reviews` - Add review
+
+### Files
+- `POST /api/upload/file` - Upload 3D file to R2
+- `GET /files/:key` - Serve files from R2
+
+### Users
+- `GET /api/users/:id` - Public profile
+- `GET /api/designers` - List designers
+
+---
+
+## Local Development
+
+1. Clone the repo
+2. Open `index.html` in browser (or use live server)
+3. API calls go to production Cloudflare Worker
+
+For API development, see the `forgauto-api` repo.
+
+---
+
+## License
+
+Copyright 2026 ForgAuto. All rights reserved.
