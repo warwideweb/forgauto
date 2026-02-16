@@ -826,9 +826,13 @@ async function handleCreateListing(e) {
 function updateTotal() { document.getElementById('totalPrice').textContent = document.getElementById('featuredCheckbox')?.checked ? '$15.00' : '$5.00'; }
 
 async function partView(id) {
-    let p = parts.find(x => x.id === id);
-    if (!p) {
-        try { p = await api(`/api/parts/${id}`); } catch (e) { return '<p>Part not found.</p>'; }
+    // Always try API first to get real data, then fall back to demo
+    let p = null;
+    try { 
+        p = await api(`/api/parts/${id}`); 
+    } catch (e) { 
+        // API failed, check demo data
+        p = parts.find(x => x.id === id);
     }
     if (!p) return '<p>Part not found.</p>';
     
