@@ -860,8 +860,23 @@ async function profileView(id) {
 }
 
 function cardHTML(p, showTrending = false, showFeatured = false) {
-    const img = p.images?.[0] || p.img || 'https://via.placeholder.com/600x450';
-    return `<div class="card ${showFeatured ? 'card-featured' : ''}" onclick="go('part', ${p.id})"><div class="card-image"><img src="${img}" alt="${p.title}"><span class="card-badge">${p.category}</span>${showTrending ? '<span class="trending-badge">HOT</span>' : ''}${showFeatured || p.featured ? '<span class="featured-badge-card">*</span>' : ''}</div><div class="card-body"><div class="card-title">${p.title}</div><div class="card-meta"><span class="card-cat">${p.make}${p.model && p.model !== 'All' ? ' ' + p.model : ''}</span><span class="card-price">$${(p.price || 0).toFixed(2)}</span></div></div></div>`;
+    const img = p.images?.[0] || p.img || `https://placehold.co/600x450/1a1a1a/666?text=${encodeURIComponent(p.title || 'Part')}`;
+    const cardClass = `card ${showFeatured || p.featured ? 'card-featured' : ''} ${showTrending ? 'card-trending' : ''}`;
+    return `<div class="${cardClass}" onclick="go('part', ${p.id})">
+        <div class="card-image">
+            <img src="${img}" alt="${p.title}" onerror="this.src='https://placehold.co/600x450/1a1a1a/666?text=No+Image'">
+            <span class="card-badge">${p.category || 'Part'}</span>
+            ${showTrending ? '<span class="trending-badge">🔥 HOT</span>' : ''}
+            ${showFeatured || p.featured ? '<span class="featured-badge-card">⭐</span>' : ''}
+        </div>
+        <div class="card-body">
+            <div class="card-title">${p.title}</div>
+            <div class="card-meta">
+                <span class="card-cat">${p.make}${p.model && p.model !== 'All' ? ' ' + p.model : ''}</span>
+                <span class="card-price">$${(p.price || 0).toFixed(2)}</span>
+            </div>
+        </div>
+    </div>`;
 }
 
 function handlePhotoUpload(event) { for (let file of event.target.files) { if (uploadedPhotos.length >= 10) break; const reader = new FileReader(); reader.onload = e => { uploadedPhotos.push(e.target.result); renderPhotoGrid(); }; reader.readAsDataURL(file); } }
