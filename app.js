@@ -1,399 +1,552 @@
 // PartForge — App Logic
 
-// Sample Data
-const listings = [
-  {
-    id: 1, title: "Mercedes 190E Hood Vents", seller: "ErrorByHuman", sellerRating: 4.9, sellerSales: 47,
-    make: "Mercedes", model: "190E (W201)", year: "1982-1993", category: "Exterior",
-    price: 29, description: "Precision-designed hood vents for the Mercedes 190E. Adds aggressive cooling and style. Snap-fit design requires no drilling — uses existing hood mounting points. Tested for 200+ km/h wind resistance in CFD simulation.",
-    material: "ASA", infill: 40, supports: "Minimal", printTime: "8-10 hours",
-    reviews: [{user:"JDM_Mike",rating:5,text:"Perfect fit on my 190E 2.3-16. Looks factory."},{user:"PrinterPro",rating:5,text:"Clean design, easy print. Seller was very helpful."}],
-    views: 342, downloads: 28, date: "2026-02-10", popular: 95,
-    images: ["🏎️"]
-  },
-  {
-    id: 2, title: "BMW E30 Intake Manifold Spacer", seller: "BimmerBits", sellerRating: 4.7, sellerSales: 23,
-    make: "BMW", model: "E30 325i", year: "1985-1991", category: "Engine Bay",
-    price: 15, description: "Intake manifold spacer designed to improve airflow on the M20 engine. Adds ~5mm spacing for better thermal isolation. Print in PETG or ABS for heat resistance.",
-    material: "PETG", infill: 60, supports: "No", printTime: "3-4 hours",
-    reviews: [{user:"E30_Dave",rating:4,text:"Works great. Noticed smoother idle after install."}],
-    views: 189, downloads: 15, date: "2026-02-12", popular: 78,
-    images: ["⚡"]
-  },
-  {
-    id: 3, title: "Honda Civic EK9 Cup Holder", seller: "CivicMods3D", sellerRating: 4.8, sellerSales: 61,
-    make: "Honda", model: "Civic EK9", year: "1996-2000", category: "Interior",
-    price: 8, description: "Finally, a proper cup holder for the EK9! Clips into the center console with no modifications. Holds standard and large cups securely. Two-piece design for easy printing.",
-    material: "PLA", infill: 20, supports: "No", printTime: "2-3 hours",
-    reviews: [{user:"TypeR_Owner",rating:5,text:"Been wanting this forever. Perfect fit!"},{user:"HondaHead",rating:5,text:"Simple, clean, functional. 10/10"}],
-    views: 567, downloads: 89, date: "2026-02-14", popular: 120,
-    images: ["🪑"]
-  },
-  {
-    id: 4, title: "Toyota AE86 Gauge Pod", seller: "HachiRokuParts", sellerRating: 4.6, sellerSales: 18,
-    make: "Toyota", model: "AE86 Corolla", year: "1983-1987", category: "Interior",
-    price: 12, description: "Triple gauge pod that mounts to the A-pillar of the AE86. Fits 52mm gauges (boost, oil temp, oil pressure). Clean OEM-like finish when printed in black.",
-    material: "PLA", infill: 25, supports: "Yes", printTime: "5-6 hours",
-    reviews: [{user:"InitialD_Fan",rating:5,text:"Tofu delivery approved! 🏔️"}],
-    views: 234, downloads: 19, date: "2026-02-08", popular: 67,
-    images: ["🎯"]
-  },
-  {
-    id: 5, title: "Mazda Miata NA Vent Rings", seller: "MiataMods", sellerRating: 4.9, sellerSales: 82,
-    make: "Mazda", model: "Miata NA (MX-5)", year: "1989-1997", category: "Interior",
-    price: 10, description: "Replacement vent rings for the NA Miata. The OEM ones always crack — these are stronger and come in any color you can print. Set of 4 included.",
-    material: "PLA", infill: 20, supports: "No", printTime: "1-2 hours",
-    reviews: [{user:"MiataGang",rating:5,text:"Way better than the brittle OEM ones."},{user:"Roadster_Life",rating:4,text:"Good fit. Slightly tight on one vent but filed down easily."}],
-    views: 445, downloads: 67, date: "2026-02-15", popular: 110,
-    images: ["🔘"]
-  },
-  {
-    id: 6, title: "Ford Mustang Phone Mount", seller: "StangParts", sellerRating: 4.5, sellerSales: 34,
-    make: "Ford", model: "Mustang S550", year: "2015-2023", category: "Accessories",
-    price: 7, description: "Dash-mounted phone holder for the S550 Mustang. Clips to the air vent with a spring-loaded grip. Fits phones up to 6.7 inches. No adhesive needed.",
-    material: "PETG", infill: 30, supports: "Minimal", printTime: "2-3 hours",
-    reviews: [{user:"Pony_Power",rating:4,text:"Solid mount, doesn't rattle at all."}],
-    views: 278, downloads: 31, date: "2026-02-11", popular: 72,
-    images: ["📱"]
-  },
-  {
-    id: 7, title: "Nissan 240SX Drift Knob", seller: "DriftKingDesigns", sellerRating: 4.8, sellerSales: 56,
-    make: "Nissan", model: "240SX S13/S14", year: "1989-1998", category: "Interior",
-    price: 9, description: "Weighted shift knob designed for drifting. Fits M10x1.25 thread (standard Nissan). Hollow core can be filled with steel BBs for extra weight. Ergonomic teardrop shape.",
-    material: "PETG", infill: 100, supports: "No", printTime: "3-4 hours",
-    reviews: [{user:"SideWays_Sam",rating:5,text:"Filled with BBs, feels amazing. Short throws feel so much better."},{user:"S14_Silvia",rating:5,text:"Clean design, perfect thread fit."}],
-    views: 389, downloads: 45, date: "2026-02-13", popular: 88,
-    images: ["🎮"]
-  },
-  {
-    id: 8, title: "Universal OBD2 Port Cover", seller: "CleanBayClub", sellerRating: 4.4, sellerSales: 12,
-    make: "Universal", model: "Universal", year: "1996+", category: "Accessories",
-    price: 5, description: "Clean cover for your OBD2 port. Keeps dust and debris out. Universal fit for standard OBD2 ports. Simple snap-on design.",
-    material: "PLA", infill: 15, supports: "No", printTime: "30-45 min",
-    reviews: [{user:"DetailKing",rating:4,text:"Simple but effective. Looks OEM."}],
-    views: 156, downloads: 22, date: "2026-02-09", popular: 45,
-    images: ["🔌"]
-  },
-  {
-    id: 9, title: "Porsche 944 Headlight Bracket", seller: "PorschePrintWorks", sellerRating: 4.7, sellerSales: 29,
-    make: "Porsche", model: "944", year: "1982-1991", category: "Brackets/Mounts",
-    price: 18, description: "Replacement headlight adjustment bracket for the 944. The OEM plastic brackets are notorious for breaking. This redesigned version is 3x stronger with reinforced mounting points.",
-    material: "ABS", infill: 50, supports: "Yes", printTime: "4-5 hours",
-    reviews: [{user:"944_Turbo",rating:5,text:"Saved me $200 vs OEM. Stronger than original."},{user:"TransaxleGang",rating:5,text:"Perfect. Every 944 owner needs these."}],
-    views: 312, downloads: 38, date: "2026-02-07", popular: 82,
-    images: ["💡"]
-  },
-  {
-    id: 10, title: "VW Golf MK2 Switch Panel", seller: "DubPrintShop", sellerRating: 4.6, sellerSales: 41,
-    make: "VW", model: "Golf MK2", year: "1983-1992", category: "Interior",
-    price: 14, description: "Custom switch panel blanking plate for the MK2 Golf. Replaces the blank switch panel with a clean design featuring cutouts for 3 toggle switches (not included). Perfect for rally builds.",
-    material: "PLA", infill: 25, supports: "No", printTime: "2-3 hours",
-    reviews: [{user:"DubLove",rating:5,text:"Looks factory. Perfect for my rally MK2 build."}],
-    views: 198, downloads: 21, date: "2026-02-06", popular: 58,
-    images: ["🎛️"]
-  },
-  {
-    id: 11, title: "Mercedes W201 Mirror Cap", seller: "ErrorByHuman", sellerRating: 4.9, sellerSales: 47,
-    make: "Mercedes", model: "W201 (190E)", year: "1982-1993", category: "Exterior",
-    price: 12, description: "Replacement side mirror cap for the W201. OEM caps crack from UV exposure — this version is designed for ASA printing for maximum UV resistance. Left and right included.",
-    material: "ASA", infill: 30, supports: "Yes", printTime: "3-4 hours",
-    reviews: [{user:"BenzLife",rating:5,text:"Perfect color match when printed in black ASA."}],
-    views: 167, downloads: 14, date: "2026-02-14", popular: 55,
-    images: ["🪞"]
-  },
-  {
-    id: 12, title: "Subaru WRX Turbo Heat Shield", seller: "BoxerPrintCo", sellerRating: 4.8, sellerSales: 37,
-    make: "Subaru", model: "WRX/STI", year: "2002-2007", category: "Engine Bay",
-    price: 22, description: "Turbo heat shield that protects the intake and nearby components from radiant heat. Print in ABS or ASA for heat resistance. Includes mounting tabs for zip-tie installation.",
-    material: "ABS", infill: 35, supports: "Minimal", printTime: "6-8 hours",
-    reviews: [{user:"SubiNation",rating:4,text:"Dropped intake temps by ~10°F. Worth it."},{user:"BoxerFlat4",rating:5,text:"Great design. Easy install with zip ties."}],
-    views: 423, downloads: 52, date: "2026-02-15", popular: 98,
-    images: ["🛡️"]
-  }
-];
-
-// Color palette for part card gradients
-const cardColors = [
-  ['#1a1a2e','#16213e'],['#0f0f23','#1a1a3e'],['#1a0a2e','#2d1b4e'],
-  ['#0a1a2e','#0f2b3e'],['#1a1a1a','#2a2a3a'],['#0f1a2e','#1b2d4e'],
-  ['#1a0f2e','#2e1b4e'],['#0a2e1a','#1b3e2d'],['#2e1a0a','#3e2b1b'],
-  ['#1a2e0a','#2d3e1b'],['#2e0a1a','#3e1b2d'],['#0a1a2e','#1b2d3e']
-];
-
-// Navigation
-function navigate(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  window.scrollTo({top: 0, behavior: 'smooth'});
-  if (page === 'browse') filterListings();
-  if (page === 'dashboard') renderDashboard();
-}
-
-function toggleMenu() {
-  document.getElementById('mobileMenu').classList.toggle('open');
-  document.getElementById('hamburger').classList.toggle('active');
-}
-
-// Listing Card HTML
-function listingCard(item) {
-  const colors = cardColors[item.id % cardColors.length];
-  const stars = '★'.repeat(Math.floor(item.sellerRating)) + (item.sellerRating % 1 ? '½' : '');
-  return `
-    <div class="listing-card" onclick="showDetail(${item.id})">
-      <div class="card-image" style="background:linear-gradient(135deg,${colors[0]},${colors[1]})">
-        <span class="card-emoji">${item.images[0]}</span>
-        <span class="card-category">${item.category}</span>
-      </div>
-      <div class="card-body">
-        <h3 class="card-title">${item.title}</h3>
-        <p class="card-compat">${item.make} ${item.model} · ${item.year}</p>
-        <div class="card-footer">
-          <span class="card-price">$${item.price}</span>
-          <span class="card-seller">${item.seller} <span class="stars">${stars}</span></span>
-        </div>
-      </div>
-    </div>`;
-}
-
-// Render featured
-function renderFeatured() {
-  const featured = [...listings].sort((a,b) => b.popular - a.popular).slice(0, 4);
-  document.getElementById('featuredGrid').innerHTML = featured.map(listingCard).join('');
-}
-
-// Filter & Render Browse
-function filterListings() {
-  const q = (document.getElementById('searchInput').value || '').toLowerCase();
-  const cat = document.getElementById('filterCategory').value;
-  const make = document.getElementById('filterMake').value;
-  const price = document.getElementById('filterPrice').value;
-  const sort = document.getElementById('filterSort').value;
-
-  let filtered = listings.filter(item => {
-    if (q && !(item.title.toLowerCase().includes(q) || item.make.toLowerCase().includes(q) || item.model.toLowerCase().includes(q) || item.category.toLowerCase().includes(q) || item.description.toLowerCase().includes(q))) return false;
-    if (cat && item.category !== cat) return false;
-    if (make && item.make !== make) return false;
-    if (price) {
-      const [min, max] = price.split('-').map(Number);
-      if (item.price < min || item.price > max) return false;
+// Placeholder Parts Data
+const parts = [
+    {
+        id: 1,
+        title: "Universal Drone Motor Mount",
+        category: "drone",
+        price: 4.99,
+        image: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=400&h=300&fit=crop",
+        seller: "DroneBuilder",
+        email: "dronebuilder@example.com",
+        description: "Universal motor mount compatible with 2204-2306 motors. Designed for 5\" racing quads. Includes vibration dampening slots.",
+        format: "STL",
+        size: "2.4 MB",
+        downloads: 234
+    },
+    {
+        id: 2,
+        title: "Tesla-Style Phone Mount",
+        category: "automotive",
+        price: 3.99,
+        image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop",
+        seller: "AutoParts3D",
+        email: "autoparts@example.com",
+        description: "Minimalist phone mount for car vents. Ball joint design allows 360° rotation. Fits phones up to 6.7 inches.",
+        format: "STL, STEP",
+        size: "1.8 MB",
+        downloads: 567
+    },
+    {
+        id: 3,
+        title: "Raspberry Pi 4 Case",
+        category: "electronics",
+        price: 2.99,
+        image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=300&fit=crop",
+        seller: "MakerSteve",
+        email: "steve@makerspace.com",
+        description: "Compact case for Raspberry Pi 4 with GPIO access and ventilation slots. Snap-fit design, no screws needed.",
+        format: "STL",
+        size: "890 KB",
+        downloads: 1205
+    },
+    {
+        id: 4,
+        title: "Planetary Gear Set",
+        category: "mechanical",
+        price: 7.99,
+        image: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&h=300&fit=crop",
+        seller: "GearHead",
+        email: "gearhead@example.com",
+        description: "5:1 ratio planetary gearbox. Printable with standard FDM printer. Designed for NEMA 17 stepper motors.",
+        format: "STL, STEP",
+        size: "4.2 MB",
+        downloads: 892
+    },
+    {
+        id: 5,
+        title: "Modular Cable Management",
+        category: "home",
+        price: 1.99,
+        image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop",
+        seller: "CleanDesk",
+        email: "cleandesk@example.com",
+        description: "Snap-together cable clips for desk organization. Set includes straight, corner, and T-junction pieces.",
+        format: "STL",
+        size: "1.2 MB",
+        downloads: 2341
+    },
+    {
+        id: 6,
+        title: "RC Car Suspension Arms",
+        category: "hobby",
+        price: 5.99,
+        image: "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?w=400&h=300&fit=crop",
+        seller: "RCMaster",
+        email: "rcmaster@example.com",
+        description: "Replacement suspension arms for 1/10 scale RC cars. Compatible with Traxxas Slash. Reinforced design.",
+        format: "STL",
+        size: "3.1 MB",
+        downloads: 445
+    },
+    {
+        id: 7,
+        title: "GoPro FPV Mount",
+        category: "drone",
+        price: 2.49,
+        image: "https://images.unsplash.com/photo-1507582020474-9a35b7d455d9?w=400&h=300&fit=crop",
+        seller: "FPVPilot",
+        email: "fpvpilot@example.com",
+        description: "30° tilted GoPro mount for FPV drones. TPU recommended for crash resistance. Fits Hero 8-12.",
+        format: "STL",
+        size: "560 KB",
+        downloads: 1123
+    },
+    {
+        id: 8,
+        title: "Arduino Project Box",
+        category: "electronics",
+        price: 1.49,
+        image: "https://images.unsplash.com/photo-1553406830-ef2513450d76?w=400&h=300&fit=crop",
+        seller: "ElectronicsMaker",
+        email: "em@example.com",
+        description: "Customizable project enclosure for Arduino Uno. Features lid with snap fit and ventilation holes.",
+        format: "STL, STEP",
+        size: "1.5 MB",
+        downloads: 876
+    },
+    {
+        id: 9,
+        title: "Timing Belt Pulley Set",
+        category: "mechanical",
+        price: 4.49,
+        image: "https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=400&h=300&fit=crop",
+        seller: "CNCBuilder",
+        email: "cnc@example.com",
+        description: "GT2 timing pulleys in various teeth counts (16T, 20T, 36T). For CNC and 3D printer builds.",
+        format: "STL, STEP",
+        size: "2.8 MB",
+        downloads: 654
+    },
+    {
+        id: 10,
+        title: "Dashboard Phone Holder",
+        category: "automotive",
+        price: 3.49,
+        image: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=400&h=300&fit=crop",
+        seller: "CarMods3D",
+        email: "carmods@example.com",
+        description: "Low-profile dashboard mount. Uses 3M adhesive base. Spring-loaded grip fits any phone.",
+        format: "STL",
+        size: "980 KB",
+        downloads: 432
+    },
+    {
+        id: 11,
+        title: "Desk Headphone Stand",
+        category: "home",
+        price: 2.99,
+        image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop",
+        seller: "DeskSetup",
+        email: "desk@example.com",
+        description: "Minimalist headphone stand with cable management. Weighted base for stability.",
+        format: "STL",
+        size: "2.1 MB",
+        downloads: 1567
+    },
+    {
+        id: 12,
+        title: "RC Plane Servo Mounts",
+        category: "hobby",
+        price: 1.99,
+        image: "https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=400&h=300&fit=crop",
+        seller: "AeroRC",
+        email: "aero@example.com",
+        description: "Universal servo mounts for 9g servos. Set of 4 with different angles for control surfaces.",
+        format: "STL",
+        size: "450 KB",
+        downloads: 234
     }
-    return true;
-  });
+];
 
-  switch(sort) {
-    case 'price-asc': filtered.sort((a,b) => a.price - b.price); break;
-    case 'price-desc': filtered.sort((a,b) => b.price - a.price); break;
-    case 'popular': filtered.sort((a,b) => b.popular - a.popular); break;
-    default: filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
-  }
+// Placeholder Designers Data
+const designers = [
+    {
+        id: 1,
+        name: "Alex Chen",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop",
+        title: "Mechanical Engineer & 3D Designer",
+        email: "alex@designstudio.com",
+        rate: "$45/hr",
+        projects: 127,
+        rating: 4.9,
+        tags: ["Mechanical", "Automotive", "Prototyping"],
+        bio: "10+ years in product design. Specialized in functional mechanical parts and automotive components. I work with Fusion 360 and SolidWorks.",
+        portfolio: [
+            "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1518770660439-4636190af475?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1553406830-ef2513450d76?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=300&h=300&fit=crop"
+        ]
+    },
+    {
+        id: 2,
+        name: "Sarah Miller",
+        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop",
+        title: "Industrial Designer",
+        email: "sarah@creativeparts.io",
+        rate: "$55/hr",
+        projects: 89,
+        rating: 5.0,
+        tags: ["Consumer Products", "Enclosures", "Artistic"],
+        bio: "Former Apple contractor. I design beautiful, functional parts that look as good as they work. Expertise in consumer electronics enclosures.",
+        portfolio: [
+            "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1518770660439-4636190af475?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1553406830-ef2513450d76?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop"
+        ]
+    },
+    {
+        id: 3,
+        name: "Mike Rodriguez",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop",
+        title: "Drone & RC Specialist",
+        email: "mike@dronepartspro.com",
+        rate: "$35/hr",
+        projects: 213,
+        rating: 4.8,
+        tags: ["Drones", "FPV", "RC", "Hobby"],
+        bio: "FPV pilot turned designer. I've designed parts for thousands of pilots. Specializing in mounts, frames, and functional RC components.",
+        portfolio: [
+            "https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1507582020474-9a35b7d455d9?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1507582020474-9a35b7d455d9?w=300&h=300&fit=crop"
+        ]
+    },
+    {
+        id: 4,
+        name: "Emily Watson",
+        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop",
+        title: "Rapid Prototyper",
+        email: "emily@protofast.design",
+        rate: "$50/hr",
+        projects: 156,
+        rating: 4.9,
+        tags: ["Prototyping", "Startups", "Fast Turnaround"],
+        bio: "I help startups go from idea to physical prototype in days, not weeks. 48-hour turnaround on most projects. SLA and FDM expertise.",
+        portfolio: [
+            "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1518770660439-4636190af475?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1553406830-ef2513450d76?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=300&h=300&fit=crop"
+        ]
+    },
+    {
+        id: 5,
+        name: "James Park",
+        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop",
+        title: "Automotive Parts Designer",
+        email: "james@autofab.design",
+        rate: "$60/hr",
+        projects: 78,
+        rating: 4.7,
+        tags: ["Automotive", "Carbon Fiber", "Performance"],
+        bio: "Ex-Tesla engineer. I design parts that can handle real-world stress. Specialize in automotive, especially EV and performance applications.",
+        portfolio: [
+            "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=300&fit=crop"
+        ]
+    },
+    {
+        id: 6,
+        name: "Lisa Tanaka",
+        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop",
+        title: "Electronics Enclosure Expert",
+        email: "lisa@enclosurelab.com",
+        rate: "$40/hr",
+        projects: 198,
+        rating: 4.9,
+        tags: ["Electronics", "Enclosures", "IoT"],
+        bio: "I design enclosures that protect your electronics and look professional. Waterproof, snap-fit, and custom solutions for any project.",
+        portfolio: [
+            "https://images.unsplash.com/photo-1518770660439-4636190af475?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1553406830-ef2513450d76?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1518770660439-4636190af475?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1553406830-ef2513450d76?w=300&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop"
+        ]
+    }
+];
 
-  document.getElementById('browseGrid').innerHTML = filtered.length
-    ? filtered.map(listingCard).join('')
-    : '<div class="no-results"><p>No parts found. Try adjusting your filters.</p></div>';
-  document.getElementById('resultCount').textContent = `${filtered.length} part${filtered.length !== 1 ? 's' : ''} found`;
-}
+// State
+let currentCategory = 'all';
+let currentView = 'home';
 
-function clearFilters() {
-  document.getElementById('searchInput').value = '';
-  document.getElementById('filterCategory').value = '';
-  document.getElementById('filterMake').value = '';
-  document.getElementById('filterPrice').value = '';
-  document.getElementById('filterSort').value = 'newest';
-  filterListings();
-}
-
-function browseCategory(cat) {
-  navigate('browse');
-  document.getElementById('filterCategory').value = cat;
-  filterListings();
-}
-
-function toggleFilters() {
-  document.getElementById('filtersPanel').classList.toggle('open');
-}
-
-// Detail Page
-function showDetail(id) {
-  const item = listings.find(l => l.id === id);
-  if (!item) return;
-  const colors = cardColors[id % cardColors.length];
-  const reviewsHtml = item.reviews.map(r => `
-    <div class="review">
-      <div class="review-header">
-        <strong>${r.user}</strong>
-        <span class="stars">${'★'.repeat(r.rating)}</span>
-      </div>
-      <p>${r.text}</p>
-    </div>
-  `).join('');
-
-  document.getElementById('detailContent').innerHTML = `
-    <div class="detail-gallery" style="background:linear-gradient(135deg,${colors[0]},${colors[1]})">
-      <span class="detail-emoji">${item.images[0]}</span>
-    </div>
-    <div class="detail-info">
-      <span class="detail-category">${item.category}</span>
-      <h1>${item.title}</h1>
-      <p class="detail-compat">${item.make} ${item.model} · ${item.year}</p>
-      <div class="detail-price-row">
-        <span class="detail-price">$${item.price}</span>
-        <span class="detail-price-label">STL File Download</span>
-      </div>
-      <button class="btn btn-primary btn-lg btn-block" onclick="showBuyModal(${item.id})">Buy Now — $${item.price}</button>
-      <div class="detail-description">
-        <h3>Description</h3>
-        <p>${item.description}</p>
-      </div>
-      <div class="detail-specs">
-        <h3>Print Specifications</h3>
-        <div class="specs-grid">
-          <div class="spec"><span class="spec-label">Material</span><span class="spec-value">${item.material}</span></div>
-          <div class="spec"><span class="spec-label">Infill</span><span class="spec-value">${item.infill}%</span></div>
-          <div class="spec"><span class="spec-label">Supports</span><span class="spec-value">${item.supports}</span></div>
-          <div class="spec"><span class="spec-label">Print Time</span><span class="spec-value">${item.printTime}</span></div>
-        </div>
-      </div>
-      <div class="detail-seller">
-        <h3>Seller</h3>
-        <div class="seller-card">
-          <div class="seller-avatar">${item.seller[0]}</div>
-          <div class="seller-info">
-            <strong>${item.seller}</strong>
-            <span class="stars">${'★'.repeat(Math.floor(item.sellerRating))} ${item.sellerRating}</span>
-            <span class="seller-stat">${item.sellerSales} sales</span>
-          </div>
-        </div>
-      </div>
-      <div class="detail-reviews">
-        <h3>Reviews (${item.reviews.length})</h3>
-        ${reviewsHtml}
-      </div>
-      <div class="detail-meta">
-        <span>${item.views} views</span> · <span>${item.downloads} downloads</span> · <span>Listed ${item.date}</span>
-      </div>
-    </div>
-  `;
-  navigate('detail');
-}
-
-// Buy Modal
-function showBuyModal(id) {
-  const item = listings.find(l => l.id === id);
-  document.getElementById('modalContent').innerHTML = `
-    <div class="buy-modal">
-      <h2>Complete Purchase</h2>
-      <div class="buy-summary">
-        <span>${item.title}</span>
-        <span class="detail-price">$${item.price}</span>
-      </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" placeholder="your@email.com" class="modal-input">
-      </div>
-      <div class="form-group">
-        <label>Card Number</label>
-        <input type="text" placeholder="4242 4242 4242 4242" class="modal-input" maxlength="19">
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Expiry</label><input type="text" placeholder="MM/YY" class="modal-input" maxlength="5"></div>
-        <div class="form-group"><label>CVC</label><input type="text" placeholder="123" class="modal-input" maxlength="4"></div>
-      </div>
-      <button class="btn btn-primary btn-lg btn-block" onclick="completePurchase()">Pay $${item.price}</button>
-      <p class="modal-secure">🔒 Secured by Stripe · Instant STL download after payment</p>
-    </div>
-  `;
-  openModal();
-}
-
-function completePurchase() {
-  document.getElementById('modalContent').innerHTML = `
-    <div class="buy-modal success-modal">
-      <div class="success-icon">✅</div>
-      <h2>Purchase Complete!</h2>
-      <p>Your STL file is ready for download.</p>
-      <button class="btn btn-primary btn-lg btn-block" onclick="closeModal()">Download STL File</button>
-    </div>
-  `;
-}
-
-function openModal() { document.getElementById('modalOverlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
-function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow = ''; }
-
-// Sell Form
-function handleSellSubmit(e) {
-  e.preventDefault();
-  document.getElementById('modalContent').innerHTML = `
-    <div class="buy-modal">
-      <h2>Preview Your Listing</h2>
-      <div class="preview-card">
-        <h3>${document.getElementById('sellTitle').value}</h3>
-        <p>${document.getElementById('sellMake').value} ${document.getElementById('sellModel').value} · ${document.getElementById('sellYear').value}</p>
-        <p class="detail-price">$${document.getElementById('sellPrice').value}</p>
-        <p>${document.getElementById('sellDesc').value}</p>
-      </div>
-      <div class="listing-fee-card">
-        <div class="fee-info"><span class="fee-label">Listing Fee</span><span class="fee-amount">$5.00</span></div>
-      </div>
-      <button class="btn btn-primary btn-lg btn-block" onclick="confirmListing()">Pay $5 & Publish</button>
-    </div>
-  `;
-  openModal();
-  return false;
-}
-
-function confirmListing() {
-  document.getElementById('modalContent').innerHTML = `
-    <div class="buy-modal success-modal">
-      <div class="success-icon">🎉</div>
-      <h2>Listing Published!</h2>
-      <p>Your part is now live on PartForge.</p>
-      <button class="btn btn-primary btn-lg btn-block" onclick="closeModal();navigate('dashboard')">View Dashboard</button>
-    </div>
-  `;
-}
-
-function handleFileUpload(e) {
-  const preview = document.getElementById('uploadPreview');
-  const placeholder = document.querySelector('.upload-placeholder');
-  preview.innerHTML = '';
-  if (e.target.files.length > 0) {
-    placeholder.style.display = 'none';
-    Array.from(e.target.files).forEach(f => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        preview.innerHTML += `<div class="preview-thumb"><img src="${ev.target.result}"><span class="remove-thumb" onclick="event.stopPropagation();this.parentElement.remove()">✕</span></div>`;
-      };
-      reader.readAsDataURL(f);
-    });
-  } else {
-    placeholder.style.display = '';
-  }
-}
-
-// Dashboard
-function renderDashboard() {
-  const myListings = listings.filter(l => l.seller === 'ErrorByHuman');
-  document.getElementById('dashListings').innerHTML = myListings.map(item => `
-    <div class="dash-listing-row">
-      <div class="dash-listing-info">
-        <span class="card-emoji-sm">${item.images[0]}</span>
-        <div>
-          <strong>${item.title}</strong>
-          <span class="dash-listing-meta">$${item.price} · ${item.views} views · ${item.downloads} downloads</span>
-        </div>
-      </div>
-      <div class="dash-listing-actions">
-        <span class="badge badge-active">Active</span>
-        <button class="btn btn-outline btn-sm">Edit</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-// Navbar scroll effect
-window.addEventListener('scroll', () => {
-  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    renderParts();
+    renderDesigners();
 });
 
-// Init
-renderFeatured();
+// View Navigation
+function showView(view) {
+    // Update nav links
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+        if (link.dataset.view === view) {
+            link.classList.add('active');
+        }
+    });
+
+    // Update views
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(view + 'View').classList.add('active');
+
+    // Show/hide hero
+    document.getElementById('hero').style.display = view === 'home' ? 'block' : 'none';
+
+    currentView = view;
+}
+
+// Render Parts
+function renderParts(filteredParts = parts) {
+    const grid = document.getElementById('partsGrid');
+    grid.innerHTML = filteredParts.map(part => `
+        <div class="part-card" onclick="openPartModal(${part.id})">
+            <img src="${part.image}" alt="${part.title}" class="part-image">
+            <div class="part-info">
+                <h3 class="part-title">${part.title}</h3>
+                <div class="part-meta">
+                    <span class="part-category">${capitalizeFirst(part.category)}</span>
+                    <span class="part-price">$${part.price.toFixed(2)}</span>
+                </div>
+                <p class="part-seller">by ${part.seller}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Render Designers
+function renderDesigners() {
+    const grid = document.getElementById('designersGrid');
+    grid.innerHTML = designers.map(designer => `
+        <div class="designer-card" onclick="openDesignerModal(${designer.id})">
+            <div class="designer-header">
+                <img src="${designer.avatar}" alt="${designer.name}" class="designer-avatar">
+                <div class="designer-info">
+                    <h3>${designer.name}</h3>
+                    <p>${designer.title}</p>
+                </div>
+            </div>
+            <div class="designer-stats">
+                <span><strong>${designer.projects}</strong> projects</span>
+                <span><strong>${designer.rating}</strong> ⭐</span>
+            </div>
+            <div class="designer-rate">${designer.rate}</div>
+            <div class="designer-tags">
+                ${designer.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Filter by Category
+function filterCategory(category) {
+    currentCategory = category;
+    if (category === 'all') {
+        renderParts();
+    } else {
+        renderParts(parts.filter(p => p.category === category));
+    }
+}
+
+// Search
+function handleSearch(event) {
+    if (event.key === 'Enter') {
+        performSearch();
+    }
+}
+
+function performSearch() {
+    const query = document.getElementById('heroSearch').value.toLowerCase();
+    if (!query) {
+        renderParts();
+        return;
+    }
+    const filtered = parts.filter(p => 
+        p.title.toLowerCase().includes(query) ||
+        p.description.toLowerCase().includes(query) ||
+        p.category.toLowerCase().includes(query)
+    );
+    renderParts(filtered);
+}
+
+// Sort
+function sortParts() {
+    const sort = document.getElementById('sortFilter').value;
+    let sorted = [...parts];
+    
+    if (currentCategory !== 'all') {
+        sorted = sorted.filter(p => p.category === currentCategory);
+    }
+
+    switch (sort) {
+        case 'price-low':
+            sorted.sort((a, b) => a.price - b.price);
+            break;
+        case 'price-high':
+            sorted.sort((a, b) => b.price - a.price);
+            break;
+        case 'popular':
+            sorted.sort((a, b) => b.downloads - a.downloads);
+            break;
+        default:
+            sorted.sort((a, b) => b.id - a.id);
+    }
+    
+    renderParts(sorted);
+}
+
+// Part Modal
+function openPartModal(id) {
+    const part = parts.find(p => p.id === id);
+    if (!part) return;
+
+    const modal = document.getElementById('partModal');
+    const body = document.getElementById('modalBody');
+
+    body.innerHTML = `
+        <img src="${part.image}" alt="${part.title}" class="modal-image">
+        <h2 class="modal-title">${part.title}</h2>
+        <p class="modal-category">${capitalizeFirst(part.category)} • by ${part.seller}</p>
+        <div class="modal-price">$${part.price.toFixed(2)}</div>
+        <p class="modal-description">${part.description}</p>
+        <div class="modal-details">
+            <div class="detail-item">
+                <span class="detail-label">Format</span>
+                <span class="detail-value">${part.format}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">File Size</span>
+                <span class="detail-value">${part.size}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Downloads</span>
+                <span class="detail-value">${part.downloads}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Seller</span>
+                <span class="detail-value">${part.seller}</span>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-primary" onclick="buyPart(${part.id})">
+                Buy Now — $${part.price.toFixed(2)}
+            </button>
+            <a href="mailto:${part.email}?subject=Question about: ${part.title}" class="btn btn-secondary">
+                Contact Seller
+            </a>
+        </div>
+    `;
+
+    modal.classList.add('active');
+}
+
+function closeModal() {
+    document.getElementById('partModal').classList.remove('active');
+}
+
+// Designer Modal
+function openDesignerModal(id) {
+    const designer = designers.find(d => d.id === id);
+    if (!designer) return;
+
+    const modal = document.getElementById('designerModal');
+    const body = document.getElementById('designerModalBody');
+
+    body.innerHTML = `
+        <div class="designer-modal-header">
+            <img src="${designer.avatar}" alt="${designer.name}" class="designer-modal-avatar">
+            <div class="designer-modal-info">
+                <h2>${designer.name}</h2>
+                <p>${designer.title}</p>
+                <div class="designer-stats">
+                    <span><strong>${designer.projects}</strong> projects</span>
+                    <span><strong>${designer.rating}</strong> ⭐</span>
+                </div>
+                <div class="designer-rate" style="margin:0">${designer.rate}</div>
+            </div>
+        </div>
+        <p class="modal-description">${designer.bio}</p>
+        <h3 style="margin: 24px 0 16px;">Portfolio</h3>
+        <div class="portfolio-grid">
+            ${designer.portfolio.map(img => `
+                <div class="portfolio-item">
+                    <img src="${img}" alt="Portfolio work">
+                </div>
+            `).join('')}
+        </div>
+        <div class="designer-tags" style="margin-bottom: 24px;">
+            ${designer.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+        </div>
+        <div class="modal-actions">
+            <a href="mailto:${designer.email}?subject=Design Project Inquiry" class="btn btn-primary">
+                Hire ${designer.name.split(' ')[0]} — ${designer.rate}
+            </a>
+            <a href="mailto:${designer.email}" class="btn btn-secondary">
+                Send Message
+            </a>
+        </div>
+    `;
+
+    modal.classList.add('active');
+}
+
+function closeDesignerModal() {
+    document.getElementById('designerModal').classList.remove('active');
+}
+
+// Buy Part (placeholder for Stripe integration)
+function buyPart(id) {
+    const part = parts.find(p => p.id === id);
+    if (!part) return;
+
+    // TODO: Replace with Stripe checkout
+    alert(`Stripe checkout coming soon!\n\nPart: ${part.title}\nPrice: $${part.price.toFixed(2)}\n\nFor now, contact the seller directly.`);
+}
+
+// Handle Listing Form
+function handleListing(event) {
+    event.preventDefault();
+    
+    // TODO: Replace with actual upload to Cloudflare R2 + Stripe for listing fee
+    alert('Listing submission coming soon!\n\nWe\'re setting up payments and file storage.\nCheck back shortly!');
+}
+
+// Close modals on outside click
+document.getElementById('partModal').addEventListener('click', (e) => {
+    if (e.target.id === 'partModal') closeModal();
+});
+
+document.getElementById('designerModal').addEventListener('click', (e) => {
+    if (e.target.id === 'designerModal') closeDesignerModal();
+});
+
+// Escape key closes modals
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeModal();
+        closeDesignerModal();
+    }
+});
+
+// Utility
+function capitalizeFirst(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
