@@ -2,7 +2,7 @@
 // Version: 3.0 - Full Backend Integration
 
 const VERSION = '3.0';
-const API_URL = 'https://api.forgauto.com'; // Change to your Cloudflare Worker URL
+const API_URL = 'https://forgauto-api.warwideweb.workers.dev'; // Cloudflare Worker API
 
 // State
 let currentUser = null;
