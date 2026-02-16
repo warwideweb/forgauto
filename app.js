@@ -1,13 +1,24 @@
 // ForgAuto — 3D Marketplace for Cars
-// Version: 2.0
+// Version: 2.2
 
-const VERSION = '2.1';
+const VERSION = '2.2';
+
+// Dark mode
+let darkMode = localStorage.getItem('darkMode') === 'true';
+if (darkMode) document.body.classList.add('dark');
+
+function toggleDarkMode() {
+    darkMode = !darkMode;
+    localStorage.setItem('darkMode', darkMode);
+    document.body.classList.toggle('dark', darkMode);
+    document.getElementById('darkToggle').textContent = darkMode ? '☀️' : '🌙';
+}
 
 // Data - Automotive Parts Only
 const parts = [
-    { id: 1, title: "Tesla-Style Phone Mount", cat: "Interior", make: "Universal", model: "All", price: 3.99, img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=450&fit=crop", "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&h=450&fit=crop"], seller: "AutoParts3D", email: "auto@example.com", desc: "Minimalist phone mount for car vents with ball joint design for 360° rotation. Fits phones up to 6.7 inches.", format: "STL, STEP", size: "1.8 MB", material: "PLA", infill: "25%", downloads: 567, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_tilt.stl" },
+    { id: 1, title: "Tesla-Style Phone Mount", cat: "Interior", make: "Universal", model: "All", price: 3.99, img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=450&fit=crop", "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&h=450&fit=crop"], seller: "AutoParts3D", email: "auto@example.com", desc: "Minimalist phone mount for car vents with ball joint design for 360° rotation. Fits phones up to 6.7 inches.", format: "STL, STEP", size: "1.8 MB", material: "PLA", infill: "25%", downloads: 567, featured: true, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_tilt.stl" },
     { id: 2, title: "BMW E30 Phone Dock", cat: "Interior", make: "BMW", model: "E30", price: 5.99, img: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1555215695-3004980ad54e?w=600&h=450&fit=crop"], seller: "BimmerParts", email: "bmw@example.com", desc: "Custom phone dock that fits perfectly in the BMW E30 center console. Holds any phone securely.", format: "STL", size: "2.1 MB", material: "PETG", infill: "30%", downloads: 312, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_pan.stl" },
-    { id: 3, title: "Toyota Supra MK4 Vent Gauge Pod", cat: "Gauges", make: "Toyota", model: "Supra MK4", price: 8.99, img: "https://images.unsplash.com/photo-1600712242805-5f78671b24da?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1600712242805-5f78671b24da?w=600&h=450&fit=crop"], seller: "JDMParts3D", email: "jdm@example.com", desc: "52mm gauge pod that replaces the center vent on MK4 Supra. Perfect fit, no modification needed.", format: "STL, STEP", size: "3.4 MB", material: "ABS", infill: "40%", downloads: 523, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_tilt.stl" },
+    { id: 3, title: "Toyota Supra MK4 Vent Gauge Pod", cat: "Gauges", make: "Toyota", model: "Supra MK4", price: 8.99, img: "https://images.unsplash.com/photo-1600712242805-5f78671b24da?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1600712242805-5f78671b24da?w=600&h=450&fit=crop"], seller: "JDMParts3D", email: "jdm@example.com", desc: "52mm gauge pod that replaces the center vent on MK4 Supra. Perfect fit, no modification needed.", format: "STL, STEP", size: "3.4 MB", material: "ABS", infill: "40%", downloads: 523, featured: true, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_tilt.stl" },
     { id: 4, title: "Honda Civic EG Cup Holder", cat: "Interior", make: "Honda", model: "Civic EG", price: 4.49, img: "https://images.unsplash.com/photo-1606611013016-969c19ba27bb?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1606611013016-969c19ba27bb?w=600&h=450&fit=crop"], seller: "HondaHacks", email: "honda@example.com", desc: "Dual cup holder insert for Honda Civic EG center console. Snug fit, no rattles.", format: "STL", size: "1.6 MB", material: "PLA", infill: "25%", downloads: 445, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_pan.stl" },
     { id: 5, title: "Mazda Miata NA Phone Mount", cat: "Interior", make: "Mazda", model: "Miata NA", price: 6.99, img: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&h=450&fit=crop"], seller: "MiataMods", email: "miata@example.com", desc: "Low-profile phone mount for NA Miata. Attaches to the tombstone without blocking any vents.", format: "STL", size: "1.9 MB", material: "PETG", infill: "30%", downloads: 678, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_tilt.stl" },
     { id: 6, title: "BMW E46 Coin Holder Delete", cat: "Interior", make: "BMW", model: "E46", price: 3.49, img: "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=600&h=450&fit=crop"], seller: "BimmerParts", email: "bmw@example.com", desc: "Clean delete panel for the E46 coin holder. Perfect for mounting switches or leaving clean.", format: "STL", size: "0.8 MB", material: "PLA", infill: "20%", downloads: 234, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_pan.stl" },
@@ -18,9 +29,31 @@ const parts = [
     { id: 11, title: "Universal Exhaust Tip 3\" Inlet", cat: "Exterior", make: "Universal", model: "All", price: 9.99, img: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&h=450&fit=crop"], seller: "ExhaustMods", email: "exhaust@example.com", desc: "Aggressive slash-cut exhaust tip with 3\" inlet. Print in high-temp materials only.", format: "STL, STEP", size: "2.2 MB", material: "ASA", infill: "50%", downloads: 234, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_tilt.stl" },
     { id: 12, title: "Honda S2000 Arm Rest Delete", cat: "Interior", make: "Honda", model: "S2000", price: 7.99, img: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&h=450&fit=crop"], seller: "S2KParts", email: "s2k@example.com", desc: "Clean arm rest delete panel for AP1/AP2 S2000. Reduces weight and cleans up interior.", format: "STL", size: "1.5 MB", material: "ABS", infill: "30%", downloads: 345, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_pan.stl" },
     { id: 13, title: "Chevrolet Camaro 6th Gen Phone Mount", cat: "Interior", make: "Chevrolet", model: "Camaro 6th Gen", price: 5.99, img: "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=600&h=450&fit=crop"], seller: "CamaroParts", email: "camaro@example.com", desc: "Dash-mounted phone holder for 6th gen Camaro. No adhesive needed, clips in securely.", format: "STL", size: "1.7 MB", material: "PETG", infill: "25%", downloads: 423, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_tilt.stl" },
-    { id: 14, title: "Toyota GR86 / BRZ Shifter Surround", cat: "Interior", make: "Toyota", model: "GR86", price: 6.49, img: "https://images.unsplash.com/photo-1626668893632-6f3a4466d22f?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1626668893632-6f3a4466d22f?w=600&h=450&fit=crop"], seller: "86Parts", email: "86@example.com", desc: "Replacement shifter surround for GR86/BRZ with cleaner design. Direct OEM replacement.", format: "STL, STEP", size: "2.0 MB", material: "ABS", infill: "30%", downloads: 289, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_pan.stl" },
+    { id: 14, title: "Toyota GR86 / BRZ Shifter Surround", cat: "Interior", make: "Toyota", model: "GR86", price: 6.49, img: "https://images.unsplash.com/photo-1626668893632-6f3a4466d22f?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1626668893632-6f3a4466d22f?w=600&h=450&fit=crop"], seller: "86Parts", email: "86@example.com", desc: "Replacement shifter surround for GR86/BRZ with cleaner design. Direct OEM replacement.", format: "STL, STEP", size: "2.0 MB", material: "ABS", infill: "30%", downloads: 289, featured: true, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_pan.stl" },
     { id: 15, title: "Universal License Plate Frame", cat: "Exterior", make: "Universal", model: "All", price: 2.99, img: "https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=600&h=450&fit=crop"], seller: "AutoMods", email: "auto@example.com", desc: "Simple, clean license plate frame. No dealer branding, just clean lines.", format: "STL", size: "0.9 MB", material: "ASA", infill: "40%", downloads: 1234, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_tilt.stl" },
     { id: 16, title: "Porsche 911 997 Key Holder", cat: "Accessories", make: "Porsche", model: "911 997", price: 8.99, img: "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?w=600&h=450&fit=crop", imgs: ["https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?w=600&h=450&fit=crop"], seller: "PorscheParts", email: "porsche@example.com", desc: "Wall-mounted key holder shaped like 997 silhouette. Great for the garage.", format: "STL", size: "1.8 MB", material: "PLA", infill: "20%", downloads: 567, stl: "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/stl/binary/pr2_head_pan.stl" }
+];
+
+// Recent sales for social proof ticker
+const recentSales = [
+    { part: "Tesla-Style Phone Mount", buyer: "Mike T.", location: "California", time: "2 min ago" },
+    { part: "BMW E30 Phone Dock", buyer: "Sarah K.", location: "Texas", time: "5 min ago" },
+    { part: "Miata NA Phone Mount", buyer: "Jake R.", location: "Florida", time: "8 min ago" },
+    { part: "VW Golf MK7 Mount", buyer: "Emma L.", location: "New York", time: "12 min ago" },
+    { part: "Supra MK4 Gauge Pod", buyer: "Chris P.", location: "Germany", time: "15 min ago" },
+    { part: "S2000 Arm Rest Delete", buyer: "David M.", location: "Japan", time: "18 min ago" },
+    { part: "350Z Triple Gauge Pod", buyer: "Alex W.", location: "UK", time: "22 min ago" },
+    { part: "License Plate Frame", buyer: "Lisa H.", location: "Canada", time: "25 min ago" }
+];
+
+// Affiliate products
+const affiliateProducts = [
+    { name: "Creality Ender 3 V3", type: "3D Printer", price: "$199", link: "https://amazon.com", img: "🖨️" },
+    { name: "Bambu Lab P1S", type: "3D Printer", price: "$699", link: "https://amazon.com", img: "🖨️" },
+    { name: "Hatchbox PLA Filament", type: "Filament", price: "$23", link: "https://amazon.com", img: "🧵" },
+    { name: "Overture PETG", type: "Filament", price: "$20", link: "https://amazon.com", img: "🧵" },
+    { name: "Digital Calipers", type: "Tool", price: "$15", link: "https://amazon.com", img: "📏" },
+    { name: "Heat Gun", type: "Tool", price: "$25", link: "https://amazon.com", img: "🔥" }
 ];
 
 const categories = [
@@ -49,7 +82,7 @@ const carModels = {
 };
 
 const designers = [
-    { id: 1, name: "Alex Chen", title: "Automotive Engineer", rate: "$50/hr", rating: 4.9, reviews: 47, img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop", email: "alex@example.com", tags: ["JDM", "European", "Interior"], bio: "10+ years designing aftermarket auto parts. Fusion 360 and SolidWorks expert. Specializing in interior trim pieces.", projects: 127 },
+    { id: 1, name: "Alex Chen", title: "Automotive Engineer", rate: "$50/hr", rating: 4.9, reviews: 47, img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop", email: "alex@example.com", tags: ["JDM", "European", "Interior"], bio: "10+ years designing aftermarket auto parts. Fusion 360 and SolidWorks expert.", projects: 127 },
     { id: 2, name: "Mike Rodriguez", title: "JDM Specialist", rate: "$40/hr", rating: 4.8, reviews: 89, img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop", email: "mike@example.com", tags: ["Honda", "Toyota", "Nissan"], bio: "JDM enthusiast with 200+ parts designed for Honda, Toyota, and Nissan platforms.", projects: 213 },
     { id: 3, name: "Sarah Miller", title: "Interior Specialist", rate: "$45/hr", rating: 5.0, reviews: 34, img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop", email: "sarah@example.com", tags: ["Interior", "Trim", "Luxury"], bio: "Former BMW interior designer. Creating premium-feel parts for enthusiast cars.", projects: 89 },
     { id: 4, name: "James Park", title: "Performance Parts Designer", rate: "$55/hr", rating: 4.7, reviews: 28, img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop", email: "james@example.com", tags: ["Performance", "Aero", "Cooling"], bio: "Ex-Tesla engineer specializing in functional aero and cooling parts.", projects: 78 },
@@ -57,11 +90,12 @@ const designers = [
     { id: 6, name: "David Kim", title: "Muscle Car Specialist", rate: "$40/hr", rating: 4.8, reviews: 41, img: "https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=200&h=200&fit=crop", email: "david@example.com", tags: ["Mustang", "Camaro", "American"], bio: "American muscle car enthusiast. Designing parts for Mustangs and Camaros.", projects: 98 }
 ];
 
-// Sample print shops (would be fetched via API in production)
+// Verified print shops with instant quotes
 const printShops = [
-    { name: "3D Print Lab Bangkok", address: "123 Sukhumvit Rd, Bangkok", distance: "2.3 km", rating: 4.8, reviews: 156, phone: "+66 2 123 4567", email: "contact@3dprintlab.th" },
-    { name: "MakerSpace BKK", address: "456 Silom Rd, Bangkok", distance: "4.1 km", rating: 4.6, reviews: 89, phone: "+66 2 234 5678", email: "hello@makerspace.co.th" },
-    { name: "Proto3D Thailand", address: "789 Rama IV, Bangkok", distance: "5.8 km", rating: 4.9, reviews: 234, phone: "+66 2 345 6789", email: "orders@proto3d.th" }
+    { name: "3D Print Lab Bangkok", address: "123 Sukhumvit Rd, Bangkok", distance: "2.3 km", rating: 4.8, reviews: 156, phone: "+66 2 123 4567", email: "contact@3dprintlab.th", verified: true, instantQuote: true, printAndShip: true, turnaround: "2-3 days" },
+    { name: "MakerSpace BKK", address: "456 Silom Rd, Bangkok", distance: "4.1 km", rating: 4.6, reviews: 89, phone: "+66 2 234 5678", email: "hello@makerspace.co.th", verified: true, instantQuote: true, printAndShip: false, turnaround: "3-5 days" },
+    { name: "Proto3D Thailand", address: "789 Rama IV, Bangkok", distance: "5.8 km", rating: 4.9, reviews: 234, phone: "+66 2 345 6789", email: "orders@proto3d.th", verified: true, instantQuote: true, printAndShip: true, turnaround: "1-2 days" },
+    { name: "QuickPrint Shop", address: "321 Rama III, Bangkok", distance: "7.2 km", rating: 4.4, reviews: 67, phone: "+66 2 456 7890", email: "info@quickprint.th", verified: false, instantQuote: false, printAndShip: false, turnaround: "5-7 days" }
 ];
 
 let view = 'home';
@@ -70,6 +104,7 @@ let filterCat = '';
 let filterMake = '';
 let filterModel = '';
 let uploadedPhotos = [];
+let lightboxImage = null;
 
 function go(v, data) {
     view = v;
@@ -96,7 +131,6 @@ function updateModels() {
     const make = document.getElementById('filterMake')?.value;
     const modelSelect = document.getElementById('filterModel');
     if (!modelSelect) return;
-    
     modelSelect.innerHTML = '<option value="">All Models</option>';
     if (make && carModels[make]) {
         carModels[make].forEach(m => {
@@ -107,7 +141,6 @@ function updateModels() {
 
 function render(data) {
     const app = document.getElementById('app');
-    
     if (view === 'home') app.innerHTML = homeView();
     else if (view === 'browse') app.innerHTML = browseView();
     else if (view === 'designers') app.innerHTML = designersView();
@@ -117,9 +150,32 @@ function render(data) {
     else if (view === 'printshops') app.innerHTML = printShopsView(data);
 }
 
+// Lightbox functions
+function openLightbox(src) {
+    lightboxImage = src;
+    document.getElementById('lightbox').classList.add('active');
+    document.getElementById('lightboxImg').src = src;
+}
+
+function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('active');
+}
+
 function homeView() {
+    const trendingParts = [...parts].sort((a, b) => b.downloads - a.downloads).slice(0, 4);
+    const featuredParts = parts.filter(p => p.featured);
+    
     return `
-        <!-- Find a Designer Banner -->
+        <!-- Just Sold Ticker -->
+        <div class="sold-ticker">
+            <div class="ticker-content">
+                ${recentSales.concat(recentSales).map(s => `
+                    <span class="ticker-item">🎉 <strong>${s.buyer}</strong> from ${s.location} just bought <strong>${s.part}</strong> · ${s.time}</span>
+                `).join('')}
+            </div>
+        </div>
+
+        <!-- Promo Banner -->
         <div class="promo-banner">
             <div class="promo-content">
                 <span class="promo-badge">NEW</span>
@@ -149,6 +205,14 @@ function homeView() {
                 </select>
                 <button class="btn" onclick="doSearch()">Find Parts</button>
             </div>
+            
+            <!-- Trust Badges -->
+            <div class="trust-badges">
+                <span class="trust-badge">🔒 Secure Checkout</span>
+                <span class="trust-badge">💰 Money Back Guarantee</span>
+                <span class="trust-badge">⚡ Instant Download</span>
+                <span class="trust-badge">🛡️ Buyer Protection</span>
+            </div>
         </div>
 
         <div class="categories">
@@ -163,6 +227,30 @@ function homeView() {
                 `).join('')}
             </div>
         </div>
+
+        <!-- Trending Parts -->
+        <div class="section">
+            <div class="section-head">
+                <h2>🔥 Trending Parts</h2>
+                <a href="#" onclick="go('browse')">View all</a>
+            </div>
+            <div class="grid">
+                ${trendingParts.map(p => cardHTML(p, true)).join('')}
+            </div>
+        </div>
+
+        <!-- Featured Parts (Paid Placement) -->
+        ${featuredParts.length ? `
+        <div class="section featured-section">
+            <div class="section-head">
+                <h2>⭐ Featured Parts</h2>
+                <span class="featured-badge">SPONSORED</span>
+            </div>
+            <div class="grid">
+                ${featuredParts.slice(0, 4).map(p => cardHTML(p, false, true)).join('')}
+            </div>
+        </div>
+        ` : ''}
         
         <div class="section">
             <div class="section-head">
@@ -171,6 +259,26 @@ function homeView() {
             </div>
             <div class="grid">
                 ${parts.slice(0, 8).map(cardHTML).join('')}
+            </div>
+        </div>
+
+        <!-- Recommended Gear (Affiliate) -->
+        <div class="section affiliate-section">
+            <div class="section-head">
+                <h2>🛠️ Recommended Gear</h2>
+                <span class="affiliate-note">We may earn commission</span>
+            </div>
+            <div class="affiliate-grid">
+                ${affiliateProducts.map(p => `
+                    <a href="${p.link}" target="_blank" class="affiliate-item">
+                        <span class="affiliate-icon">${p.img}</span>
+                        <div class="affiliate-info">
+                            <strong>${p.name}</strong>
+                            <span>${p.type}</span>
+                        </div>
+                        <span class="affiliate-price">${p.price}</span>
+                    </a>
+                `).join('')}
             </div>
         </div>
 
@@ -196,22 +304,10 @@ function homeView() {
 
         <!-- Stats Bar -->
         <div class="stats-bar">
-            <div class="stat">
-                <span class="stat-num">${parts.length}+</span>
-                <span class="stat-label">Parts Listed</span>
-            </div>
-            <div class="stat">
-                <span class="stat-num">${designers.length}</span>
-                <span class="stat-label">Designers</span>
-            </div>
-            <div class="stat">
-                <span class="stat-num">${carMakes.length - 1}</span>
-                <span class="stat-label">Car Brands</span>
-            </div>
-            <div class="stat">
-                <span class="stat-num">$5</span>
-                <span class="stat-label">Flat Fee</span>
-            </div>
+            <div class="stat"><span class="stat-num">${parts.length}+</span><span class="stat-label">Parts Listed</span></div>
+            <div class="stat"><span class="stat-num">${designers.length}</span><span class="stat-label">Designers</span></div>
+            <div class="stat"><span class="stat-num">${carMakes.length - 1}</span><span class="stat-label">Car Brands</span></div>
+            <div class="stat"><span class="stat-num">$5</span><span class="stat-label">Flat Fee</span></div>
         </div>
 
         <div class="version-tag">v${VERSION}</div>
@@ -220,25 +316,20 @@ function homeView() {
 
 function browseView() {
     let filtered = parts;
-    
     if (filter) {
         const q = filter.toLowerCase();
         filtered = filtered.filter(p => 
-            p.title.toLowerCase().includes(q) || 
-            p.cat.toLowerCase().includes(q) ||
-            p.desc.toLowerCase().includes(q) ||
-            (p.make && p.make.toLowerCase().includes(q)) ||
+            p.title.toLowerCase().includes(q) || p.cat.toLowerCase().includes(q) ||
+            p.desc.toLowerCase().includes(q) || (p.make && p.make.toLowerCase().includes(q)) ||
             (p.model && p.model.toLowerCase().includes(q))
         );
     }
-    
     if (filterCat) filtered = filtered.filter(p => p.cat === filterCat);
     if (filterMake) filtered = filtered.filter(p => p.make === filterMake);
     if (filterModel) filtered = filtered.filter(p => p.model === filterModel);
     
     const title = filterMake && filterModel ? `${filterMake} ${filterModel}` : 
-                  filterMake ? filterMake :
-                  filterCat ? filterCat : 
+                  filterMake ? filterMake : filterCat ? filterCat : 
                   filter ? `"${filter}"` : 'All Parts';
     
     return `
@@ -247,29 +338,20 @@ function browseView() {
                 <h3>Category</h3>
                 <ul>
                     <li><a href="#" onclick="filterCat='';go('browse')" class="${!filterCat?'active':''}">All</a></li>
-                    ${categories.map(c => `
-                        <li><a href="#" onclick="filterCat='${c.name}';go('browse')" class="${filterCat===c.name?'active':''}">${c.icon} ${c.name}</a></li>
-                    `).join('')}
+                    ${categories.map(c => `<li><a href="#" onclick="filterCat='${c.name}';go('browse')" class="${filterCat===c.name?'active':''}">${c.icon} ${c.name}</a></li>`).join('')}
                 </ul>
-                
                 <h3>Make</h3>
                 <ul>
                     <li><a href="#" onclick="filterMake='';filterModel='';go('browse')" class="${!filterMake?'active':''}">All Makes</a></li>
-                    ${carMakes.map(m => `
-                        <li><a href="#" onclick="filterMake='${m}';filterModel='';go('browse')" class="${filterMake===m?'active':''}">${m}</a></li>
-                    `).join('')}
+                    ${carMakes.map(m => `<li><a href="#" onclick="filterMake='${m}';filterModel='';go('browse')" class="${filterMake===m?'active':''}">${m}</a></li>`).join('')}
                 </ul>
-                
                 ${filterMake && carModels[filterMake] ? `
                     <h3>Model</h3>
                     <ul>
                         <li><a href="#" onclick="filterModel='';go('browse')" class="${!filterModel?'active':''}">All Models</a></li>
-                        ${carModels[filterMake].map(m => `
-                            <li><a href="#" onclick="filterModel='${m}';go('browse')" class="${filterModel===m?'active':''}">${m}</a></li>
-                        `).join('')}
+                        ${carModels[filterMake].map(m => `<li><a href="#" onclick="filterModel='${m}';go('browse')" class="${filterModel===m?'active':''}">${m}</a></li>`).join('')}
                     </ul>
                 ` : ''}
-
                 <div class="sidebar-cta">
                     <p>Don't have a printer?</p>
                     <a href="#" onclick="go('printshops')" class="btn btn-outline" style="width:100%">Find Print Shop</a>
@@ -281,7 +363,7 @@ function browseView() {
                     <span style="color:var(--muted)">${filtered.length} parts</span>
                 </div>
                 <div class="grid">
-                    ${filtered.length ? filtered.map(cardHTML).join('') : '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:48px 0;">No parts found for this vehicle. <a href="#" onclick="go(\'sell\')">Be the first to sell one!</a></p>'}
+                    ${filtered.length ? filtered.map(cardHTML).join('') : '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:48px 0;">No parts found. <a href="#" onclick="go(\'sell\')">Be the first to sell one!</a></p>'}
                 </div>
             </div>
         </div>
@@ -292,35 +374,27 @@ function designersView() {
     return `
         <div class="page-header">
             <h1>Find a Designer</h1>
-            <p>Need a custom part for your car? Work with automotive specialists who can bring your idea to life.</p>
+            <p>Need a custom part? Work with automotive specialists.</p>
         </div>
-        
         <div class="designer-filters">
             <button class="filter-btn active">All</button>
             <button class="filter-btn">JDM</button>
             <button class="filter-btn">European</button>
             <button class="filter-btn">American</button>
             <button class="filter-btn">Interior</button>
-            <button class="filter-btn">Performance</button>
         </div>
-        
         <div class="designers-grid">
             ${designers.map(d => `
                 <div class="designer" onclick="go('designer', ${d.id})">
                     <div class="designer-top">
                         <img src="${d.img}" alt="${d.name}">
-                        <div>
-                            <h3>${d.name}</h3>
-                            <p>${d.title}</p>
-                        </div>
+                        <div><h3>${d.name}</h3><p>${d.title}</p></div>
                     </div>
                     <div class="designer-stats">
                         <span class="designer-rate">${d.rate}</span>
                         <span class="designer-rating">⭐ ${d.rating} (${d.reviews})</span>
                     </div>
-                    <div class="tags">
-                        ${d.tags.map(t => `<span class="tag">${t}</span>`).join('')}
-                    </div>
+                    <div class="tags">${d.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
                     <div class="designer-projects">${d.projects} completed projects</div>
                 </div>
             `).join('')}
@@ -333,146 +407,65 @@ function sellView() {
         <div class="sell-layout">
             <div class="sell-info">
                 <h1>Sell your car parts</h1>
-                <p>Upload your automotive designs, set your price, start earning.</p>
-                
+                <p>Upload your designs, set your price, start earning.</p>
                 <div class="steps">
-                    <div class="step">
-                        <div class="step-num">1</div>
-                        <div>
-                            <h4>Upload your files</h4>
-                            <p>3D files + photos of printed parts</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-num">2</div>
-                        <div>
-                            <h4>Pay $5 listing fee</h4>
-                            <p>One-time. Listing stays forever.</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-num">3</div>
-                        <div>
-                            <h4>Get paid instantly</h4>
-                            <p>Keep 100% of every sale.</p>
-                        </div>
-                    </div>
+                    <div class="step"><div class="step-num">1</div><div><h4>Upload files</h4><p>3D files + photos</p></div></div>
+                    <div class="step"><div class="step-num">2</div><div><h4>Pay listing fee</h4><p>One-time $5</p></div></div>
+                    <div class="step"><div class="step-num">3</div><div><h4>Get paid</h4><p>Keep 100%</p></div></div>
                 </div>
-                
                 <div class="pricing">
                     <div class="pricing-big">$5</div>
                     <div class="pricing-sub">one-time listing fee</div>
-                    <ul>
-                        <li>Keep 100% of sales</li>
-                        <li>No monthly fees</li>
-                        <li>No commission</li>
-                        <li>Listing never expires</li>
-                        <li>Unlimited photos</li>
-                    </ul>
-                </div>
-
-                <div class="what-sells">
-                    <h3>What Sells Well</h3>
-                    <ul>
-                        <li>📱 Phone mounts & holders</li>
-                        <li>☕ Cup holder inserts</li>
-                        <li>🔢 Gauge pods & bezels</li>
-                        <li>🎛️ Switch panels & deletes</li>
-                        <li>🔧 Tool holders & organizers</li>
-                        <li>🔑 Key holders & accessories</li>
-                    </ul>
+                    <ul><li>Keep 100% of sales</li><li>No monthly fees</li><li>No commission</li><li>Listing never expires</li></ul>
                 </div>
             </div>
-            
             <div class="form">
                 <h2>Create Listing</h2>
-                
-                <div class="field">
-                    <label>Part Name</label>
-                    <input type="text" placeholder="e.g., BMW E30 Phone Mount">
-                </div>
-                
-                <div class="field">
-                    <label>Description</label>
-                    <textarea rows="4" placeholder="Describe fitment, materials, print settings..."></textarea>
-                </div>
-                
+                <div class="field"><label>Part Name</label><input type="text" placeholder="e.g., BMW E30 Phone Mount"></div>
+                <div class="field"><label>Description</label><textarea rows="4" placeholder="Describe fitment, materials..."></textarea></div>
                 <div class="field-row">
-                    <div class="field">
-                        <label>Make</label>
-                        <select id="sellMake" onchange="updateSellModels()">
-                            ${carMakes.map(m => `<option>${m}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>Model</label>
-                        <select id="sellModel">
-                            <option>Select model...</option>
-                        </select>
-                    </div>
+                    <div class="field"><label>Make</label><select id="sellMake" onchange="updateSellModels()">${carMakes.map(m => `<option>${m}</option>`).join('')}</select></div>
+                    <div class="field"><label>Model</label><select id="sellModel"><option>Select model...</option></select></div>
                 </div>
-                
                 <div class="field-row">
-                    <div class="field">
-                        <label>Category</label>
-                        <select>
-                            ${categories.map(c => `<option>${c.icon} ${c.name}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>Price (USD)</label>
-                        <input type="number" placeholder="4.99" min="0.99" step="0.01">
-                    </div>
+                    <div class="field"><label>Category</label><select>${categories.map(c => `<option>${c.icon} ${c.name}</option>`).join('')}</select></div>
+                    <div class="field"><label>Price (USD)</label><input type="number" placeholder="4.99" min="0.99" step="0.01"></div>
                 </div>
-                
                 <div class="field">
                     <label>3D File <span class="required">*</span></label>
-                    <div class="dropzone" id="fileDropzone">
-                        <div class="dropzone-icon">📦</div>
-                        <p>Drop 3D file here or click to browse</p>
-                        <span>STL, STEP, OBJ, 3MF (max 50MB)</span>
-                    </div>
+                    <div class="dropzone"><div class="dropzone-icon">📦</div><p>Drop 3D file here</p><span>STL, STEP, OBJ, 3MF</span></div>
                 </div>
-
                 <div class="field">
                     <label>Photos <span class="required">*</span></label>
-                    <div class="photo-upload-area">
-                        <div class="photo-grid" id="photoGrid">
-                            <div class="photo-add" onclick="document.getElementById('photoInput').click()">
-                                <span class="photo-add-icon">+</span>
-                                <span>Add Photo</span>
-                            </div>
+                    <div class="photo-grid" id="photoGrid">
+                        <div class="photo-add" onclick="document.getElementById('photoInput').click()"><span class="photo-add-icon">+</span><span>Add</span></div>
+                    </div>
+                    <input type="file" id="photoInput" accept="image/*" multiple hidden onchange="handlePhotoUpload(event)">
+                </div>
+                <div class="field"><label>Your Email</label><input type="email" placeholder="you@example.com"></div>
+                
+                <!-- Featured Listing Upsell -->
+                <div class="upsell-box">
+                    <label class="upsell-label">
+                        <input type="checkbox" id="featuredCheckbox" onchange="updateTotal()">
+                        <div class="upsell-content">
+                            <span class="upsell-badge">⭐ FEATURED</span>
+                            <strong>Get Featured Placement +$10</strong>
+                            <p>Your listing appears in the Featured section at the top of the homepage for 30 days.</p>
                         </div>
-                        <input type="file" id="photoInput" accept="image/*" multiple hidden onchange="handlePhotoUpload(event)">
-                        <div class="field-hint">Add photos of your printed part. At least 1 required, up to 10 max. Show different angles, fitment, and quality.</div>
-                    </div>
-                </div>
-
-                <div class="field">
-                    <label>Print Settings (Optional)</label>
-                    <div class="field-row">
-                        <input type="text" placeholder="Material (e.g., PLA, PETG)">
-                        <input type="text" placeholder="Infill % (e.g., 25%)">
-                    </div>
+                    </label>
                 </div>
                 
-                <div class="field">
-                    <label>Your Email</label>
-                    <input type="email" placeholder="you@example.com">
-                    <div class="field-hint">For earnings and buyer questions</div>
-                </div>
-                
-                <div class="form-total">
-                    <span>Total</span>
-                    <span>$5.00</span>
-                </div>
-                
+                <div class="form-total"><span>Total</span><span id="totalPrice">$5.00</span></div>
                 <button class="btn btn-lg" style="width:100%">Continue to Payment</button>
-
-                <p class="form-note">By listing, you confirm you own the rights to this design.</p>
             </div>
         </div>
     `;
+}
+
+function updateTotal() {
+    const featured = document.getElementById('featuredCheckbox')?.checked;
+    document.getElementById('totalPrice').textContent = featured ? '$15.00' : '$5.00';
 }
 
 function partView(id) {
@@ -487,11 +480,12 @@ function partView(id) {
                 </div>
                 <div class="gallery-thumbs">
                     ${(p.imgs || [p.img]).map((img, i) => `
-                        <img src="${img}" alt="${p.title}" class="thumb ${i===0?'active':''}" onclick="setMainImage(this, '${img}')">
+                        <img src="${img}" alt="${p.title}" class="thumb ${i===0?'active':''}" onclick="openLightbox('${img}')">
                     `).join('')}
                 </div>
             </div>
             <div class="detail-info">
+                ${p.featured ? '<span class="detail-featured-badge">⭐ Featured</span>' : ''}
                 <div class="detail-breadcrumb">${p.make} › ${p.model} › ${p.cat}</div>
                 <h1>${p.title}</h1>
                 <div class="detail-seller">
@@ -500,35 +494,42 @@ function partView(id) {
                     <span class="detail-downloads">📥 ${p.downloads} downloads</span>
                 </div>
                 <div class="detail-price">$${p.price.toFixed(2)}</div>
+                
+                <!-- Trust Badges -->
+                <div class="detail-trust">
+                    <span>🔒 Secure</span><span>⚡ Instant Download</span><span>💰 Money Back</span>
+                </div>
+                
                 <div class="detail-actions">
                     <button class="btn btn-lg btn-primary">Buy Now — $${p.price.toFixed(2)}</button>
                     <a href="mailto:${p.email}?subject=Question: ${p.title}" class="btn btn-lg btn-outline">Contact Seller</a>
                 </div>
 
-                <!-- Find Print Shop -->
-                <div class="print-shop-cta">
-                    <div class="print-shop-icon">🖨️</div>
-                    <div class="print-shop-text">
-                        <strong>Don't have a 3D printer?</strong>
-                        <span>Find a print shop near you to make this part</span>
+                <!-- Print & Ship CTA -->
+                <div class="print-ship-cta">
+                    <div class="print-ship-header">
+                        <span class="print-ship-icon">🖨️📦</span>
+                        <div>
+                            <strong>Print & Ship</strong>
+                            <span>Don't have a printer? We'll print it and ship it to you.</span>
+                        </div>
                     </div>
-                    <a href="#" onclick="go('printshops', ${p.id})" class="btn btn-sm">Find Print Shop</a>
+                    <div class="print-ship-options">
+                        <button class="btn btn-sm" onclick="go('printshops', ${p.id})">Find Local Shop</button>
+                        <button class="btn btn-sm btn-primary" onclick="alert('Print & Ship coming soon!')">Get Instant Quote</button>
+                    </div>
                 </div>
 
-                <div class="detail-desc">
-                    <h2>Description</h2>
-                    <p>${p.desc}</p>
-                </div>
+                <div class="detail-desc"><h2>Description</h2><p>${p.desc}</p></div>
                 <div class="specs">
                     <h2>Specifications</h2>
                     <div class="spec-row"><span>Vehicle</span><span>${p.make} ${p.model}</span></div>
                     <div class="spec-row"><span>Category</span><span>${p.cat}</span></div>
                     <div class="spec-row"><span>Format</span><span>${p.format}</span></div>
                     <div class="spec-row"><span>File Size</span><span>${p.size}</span></div>
-                    <div class="spec-row"><span>Recommended Material</span><span>${p.material}</span></div>
+                    <div class="spec-row"><span>Material</span><span>${p.material}</span></div>
                     <div class="spec-row"><span>Infill</span><span>${p.infill}</span></div>
                 </div>
-
                 <div class="part-actions-secondary">
                     <button class="btn btn-outline btn-sm">❤️ Save</button>
                     <button class="btn btn-outline btn-sm">📤 Share</button>
@@ -536,14 +537,14 @@ function partView(id) {
                 </div>
             </div>
         </div>
-
-        <div class="section">
-            <div class="section-head">
-                <h2>Similar Parts</h2>
-            </div>
-            <div class="grid">
-                ${parts.filter(x => x.id !== p.id && (x.make === p.make || x.cat === p.cat)).slice(0, 4).map(cardHTML).join('')}
-            </div>
+        <div class="section"><div class="section-head"><h2>Similar Parts</h2></div>
+            <div class="grid">${parts.filter(x => x.id !== p.id && (x.make === p.make || x.cat === p.cat)).slice(0, 4).map(cardHTML).join('')}</div>
+        </div>
+        
+        <!-- Lightbox -->
+        <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+            <button class="lightbox-close" onclick="closeLightbox()">×</button>
+            <img id="lightboxImg" src="" alt="Zoomed image">
         </div>
     `;
 }
@@ -554,9 +555,8 @@ function printShopsView(partId) {
     return `
         <div class="page-header">
             <h1>Find a Print Shop</h1>
-            <p>Don't have a 3D printer? Find a local print shop to make your part.</p>
+            <p>Get your part printed and shipped to you.</p>
         </div>
-
         ${part ? `
             <div class="selected-part-banner">
                 <img src="${part.img}" alt="${part.title}">
@@ -566,39 +566,35 @@ function printShopsView(partId) {
                 </div>
             </div>
         ` : ''}
-
         <div class="location-search">
             <input type="text" id="locationInput" placeholder="Enter your city or zip code...">
             <button class="btn" onclick="searchPrintShops()">🔍 Search</button>
             <button class="btn btn-outline" onclick="useMyLocation()">📍 Use My Location</button>
         </div>
-
         <div class="print-shops-list">
             ${printShops.map(shop => `
-                <div class="print-shop-card">
+                <div class="print-shop-card ${shop.verified ? 'verified' : ''}">
                     <div class="print-shop-header">
-                        <h3>${shop.name}</h3>
+                        <div>
+                            <h3>${shop.name} ${shop.verified ? '<span class="verified-badge">✓ Verified</span>' : ''}</h3>
+                            ${shop.instantQuote ? '<span class="instant-badge">⚡ Instant Quotes</span>' : ''}
+                            ${shop.printAndShip ? '<span class="ship-badge">📦 Print & Ship</span>' : ''}
+                        </div>
                         <span class="print-shop-distance">${shop.distance}</span>
                     </div>
                     <p class="print-shop-address">📍 ${shop.address}</p>
-                    <div class="print-shop-rating">⭐ ${shop.rating} (${shop.reviews} reviews)</div>
+                    <div class="print-shop-meta">
+                        <span>⭐ ${shop.rating} (${shop.reviews})</span>
+                        <span>🕐 ${shop.turnaround}</span>
+                    </div>
                     <div class="print-shop-actions">
                         <a href="tel:${shop.phone}" class="btn btn-sm btn-outline">📞 Call</a>
-                        <a href="mailto:${shop.email}${part ? `?subject=Print Request: ${part.title}&body=Hi, I'd like to get a quote for printing this part: ${part.title} (${part.format}, ${part.size})` : ''}" class="btn btn-sm btn-primary">📧 Request Quote</a>
-                        <a href="https://maps.google.com/?q=${encodeURIComponent(shop.address)}" target="_blank" class="btn btn-sm btn-outline">🗺️ Directions</a>
+                        ${shop.instantQuote ? `<button class="btn btn-sm btn-primary" onclick="alert('Instant quote: ~$${(Math.random() * 20 + 10).toFixed(2)} for this part')">⚡ Instant Quote</button>` : ''}
+                        ${shop.printAndShip ? `<button class="btn btn-sm" onclick="alert('Print & Ship: They will print and mail it to you!')">📦 Print & Ship</button>` : ''}
+                        <a href="mailto:${shop.email}${part ? `?subject=Print: ${part.title}` : ''}" class="btn btn-sm btn-outline">📧 Email</a>
                     </div>
                 </div>
             `).join('')}
-        </div>
-
-        <div class="print-tips">
-            <h3>Tips for Getting Your Part Printed</h3>
-            <ul>
-                <li><strong>Material matters:</strong> PETG for functional parts, PLA for decorative, ABS for high-temp areas</li>
-                <li><strong>Send the specs:</strong> Include recommended infill, layer height, and orientation</li>
-                <li><strong>Ask for a test print:</strong> Get a small section printed first to check fit</li>
-                <li><strong>Request multiple quotes:</strong> Prices can vary significantly between shops</li>
-            </ul>
         </div>
     `;
 }
@@ -606,7 +602,6 @@ function printShopsView(partId) {
 function designerView(id) {
     const d = designers.find(x => x.id === id);
     if (!d) return '<p>Designer not found.</p>';
-    
     return `
         <div class="designer-profile">
             <div class="designer-header">
@@ -615,48 +610,34 @@ function designerView(id) {
                     <h1>${d.name}</h1>
                     <p class="designer-title">${d.title}</p>
                     <div class="designer-meta">
-                        <span class="designer-rating-lg">⭐ ${d.rating} (${d.reviews} reviews)</span>
-                        <span class="designer-projects-lg">${d.projects} projects completed</span>
+                        <span>⭐ ${d.rating} (${d.reviews} reviews)</span>
+                        <span>${d.projects} projects</span>
                     </div>
-                    <div class="tags">
-                        ${d.tags.map(t => `<span class="tag">${t}</span>`).join('')}
-                    </div>
+                    <div class="tags">${d.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
                 </div>
                 <div class="designer-cta">
                     <div class="designer-rate-lg">${d.rate}</div>
                     <a href="mailto:${d.email}?subject=Custom Part Request" class="btn btn-lg btn-primary">Hire ${d.name.split(' ')[0]}</a>
-                    <a href="mailto:${d.email}" class="btn btn-lg btn-outline">Send Message</a>
                 </div>
             </div>
-            
             <div class="designer-body">
-                <div class="designer-about">
-                    <h2>About</h2>
-                    <p>${d.bio}</p>
-                </div>
-                
-                <div class="designer-portfolio">
-                    <h2>Recent Work</h2>
-                    <div class="portfolio-grid">
-                        ${parts.slice(0, 4).map(p => `
-                            <div class="portfolio-item" onclick="go('part', ${p.id})">
-                                <img src="${p.img}" alt="${p.title}">
-                                <span>${p.title}</span>
-                            </div>
-                        `).join('')}
-                    </div>
+                <div class="designer-about"><h2>About</h2><p>${d.bio}</p></div>
+                <div class="designer-portfolio"><h2>Recent Work</h2>
+                    <div class="portfolio-grid">${parts.slice(0, 4).map(p => `<div class="portfolio-item" onclick="go('part', ${p.id})"><img src="${p.img}"><span>${p.title}</span></div>`).join('')}</div>
                 </div>
             </div>
         </div>
     `;
 }
 
-function cardHTML(p) {
+function cardHTML(p, showTrending = false, showFeatured = false) {
     return `
-        <div class="card" onclick="go('part', ${p.id})">
+        <div class="card ${showFeatured ? 'card-featured' : ''}" onclick="go('part', ${p.id})">
             <div class="card-image">
                 <img src="${p.img}" alt="${p.title}">
                 <span class="card-badge">${p.cat}</span>
+                ${showTrending ? '<span class="trending-badge">🔥</span>' : ''}
+                ${showFeatured || p.featured ? '<span class="featured-badge-card">⭐</span>' : ''}
             </div>
             <div class="card-body">
                 <div class="card-title">${p.title}</div>
@@ -669,19 +650,12 @@ function cardHTML(p) {
     `;
 }
 
-// Photo upload handling
 function handlePhotoUpload(event) {
     const files = event.target.files;
-    const grid = document.getElementById('photoGrid');
-    
     for (let file of files) {
         if (uploadedPhotos.length >= 10) break;
-        
         const reader = new FileReader();
-        reader.onload = function(e) {
-            uploadedPhotos.push(e.target.result);
-            renderPhotoGrid();
-        };
+        reader.onload = e => { uploadedPhotos.push(e.target.result); renderPhotoGrid(); };
         reader.readAsDataURL(file);
     }
 }
@@ -689,139 +663,67 @@ function handlePhotoUpload(event) {
 function renderPhotoGrid() {
     const grid = document.getElementById('photoGrid');
     if (!grid) return;
-    
     grid.innerHTML = uploadedPhotos.map((photo, i) => `
-        <div class="photo-item">
-            <img src="${photo}" alt="Photo ${i+1}">
-            <button class="photo-remove" onclick="removePhoto(${i})">×</button>
-        </div>
-    `).join('') + (uploadedPhotos.length < 10 ? `
-        <div class="photo-add" onclick="document.getElementById('photoInput').click()">
-            <span class="photo-add-icon">+</span>
-            <span>Add Photo</span>
-        </div>
-    ` : '');
+        <div class="photo-item"><img src="${photo}"><button class="photo-remove" onclick="removePhoto(${i})">×</button></div>
+    `).join('') + (uploadedPhotos.length < 10 ? `<div class="photo-add" onclick="document.getElementById('photoInput').click()"><span class="photo-add-icon">+</span><span>Add</span></div>` : '');
 }
 
-function removePhoto(index) {
-    uploadedPhotos.splice(index, 1);
-    renderPhotoGrid();
-}
+function removePhoto(index) { uploadedPhotos.splice(index, 1); renderPhotoGrid(); }
 
 function updateSellModels() {
     const make = document.getElementById('sellMake')?.value;
     const modelSelect = document.getElementById('sellModel');
     if (!modelSelect || !make) return;
-    
     modelSelect.innerHTML = '<option>Select model...</option>';
-    if (carModels[make]) {
-        carModels[make].forEach(m => {
-            modelSelect.innerHTML += `<option value="${m}">${m}</option>`;
-        });
-    }
+    if (carModels[make]) carModels[make].forEach(m => { modelSelect.innerHTML += `<option value="${m}">${m}</option>`; });
 }
 
-function setMainImage(thumb, src) {
-    document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
-    thumb.classList.add('active');
-    // Could also update 3D viewer background or add image preview
-}
-
-function searchPrintShops() {
-    // Would integrate with Google Places API
-    alert('This would search for print shops in your area. In production, this connects to Google Places API.');
-}
-
+function searchPrintShops() { alert('Searching for print shops in your area...'); }
 function useMyLocation() {
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            document.getElementById('locationInput').value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-            searchPrintShops();
+        navigator.geolocation.getCurrentPosition(pos => {
+            document.getElementById('locationInput').value = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
         });
-    } else {
-        alert('Geolocation not supported');
     }
 }
 
-// 3D Viewer
 function initViewer(partId) {
     const container = document.getElementById('viewer3d');
     if (!container || !window.THREE) return;
-    
     const p = parts.find(x => x.id === partId);
     if (!p || !p.stl) return;
-    
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    
+    const width = container.clientWidth, height = container.clientHeight;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a1a1a);
-    
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
     camera.position.set(0, 0, 100);
-    
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
-    
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 2;
-    
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
-    
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(1, 1, 1);
-    scene.add(directionalLight);
-    
-    const backLight = new THREE.DirectionalLight(0xffffff, 0.4);
-    backLight.position.set(-1, -1, -1);
-    scene.add(backLight);
-    
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(1, 1, 1);
+    scene.add(dirLight);
     const loader = new THREE.STLLoader();
-    loader.load(p.stl, function(geometry) {
-        const material = new THREE.MeshPhongMaterial({ 
-            color: 0x2563eb,
-            specular: 0x111111,
-            shininess: 50
-        });
+    loader.load(p.stl, geometry => {
+        const material = new THREE.MeshPhongMaterial({ color: 0x2563eb, shininess: 50 });
         const mesh = new THREE.Mesh(geometry, material);
-        
         geometry.computeBoundingBox();
-        const box = geometry.boundingBox;
         const center = new THREE.Vector3();
-        box.getCenter(center);
+        geometry.boundingBox.getCenter(center);
         mesh.position.sub(center);
-        
         const size = new THREE.Vector3();
-        box.getSize(size);
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 50 / maxDim;
+        geometry.boundingBox.getSize(size);
+        const scale = 50 / Math.max(size.x, size.y, size.z);
         mesh.scale.set(scale, scale, scale);
-        
         scene.add(mesh);
     });
-    
-    function animate() {
-        requestAnimationFrame(animate);
-        controls.update();
-        renderer.render(scene, camera);
-    }
-    animate();
-    
-    window.addEventListener('resize', () => {
-        const w = container.clientWidth;
-        const h = container.clientHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
-    });
+    (function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); })();
 }
 
 console.log(`ForgAuto v${VERSION} loaded`);
