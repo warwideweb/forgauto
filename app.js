@@ -153,7 +153,7 @@ const printShops = [
     { name: "Proto3D Thailand", address: "789 Rama IV, Bangkok", distance: "5.8 km", rating: 4.9, reviews: 234, phone: "+66 2 345 6789", email: "orders@proto3d.th", verified: true, instantQuote: true, printAndShip: true, turnaround: "1-2 days" }
 ];
 
-let view = 'home', filter = '', filterCat = '', filterMake = '', filterModel = '', uploadedPhotos = [];
+let view = 'home', filter = '', filterCat = '', filterMake = '', filterModel = '', uploadedPhotos = [], uploadedFile = null;
 let parts = demoParts;
 let designers = demoDesigners;
 
@@ -502,7 +502,7 @@ async function dashboardView() {
         
         <div id="dashListings" class="dash-content">
             <h2>My Listings (${myParts.length})</h2>
-            ${myParts.length ? `<div class="grid">${myParts.map(cardHTML).join('')}</div>` : '<p class="empty-state">No listings yet. <a href="#" onclick="go(\'sell\'); return false;">Create your first listing</a></p>'}
+            ${myParts.length ? `<div class="grid">${myParts.map(p => cardHTML(p, false, false, true)).join('')}</div>` : '<p class="empty-state">No listings yet. <a href="#" onclick="go(\'sell\'); return false;">Create your first listing</a></p>'}
         </div>
         
         <div id="dashMessages" class="dash-content" style="display:none">
@@ -778,43 +778,74 @@ function updatePartModels() {
 
 function handleFileSelect(e) {
     const file = e.target.files[0];
-    if (file) document.getElementById('fileName').textContent = file.name;
+    if (file) {
+        // Validate file type
+        const validTypes = ['.stl', '.step', '.stp', '.obj', '.3mf'];
+        const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+        if (!validTypes.includes(ext)) {
+            alert('Invalid file type. Please upload STL, STEP, OBJ, or 3MF files.');
+            return;
+        }
+        uploadedFile = file;
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileName').classList.add('file-selected');
+    }
 }
 
 async function handleCreateListing(e) {
     e.preventDefault();
     
-    // Validate at least one photo
-    if (uploadedPhotos.length === 0) {
-        alert('Please add at least one photo for your listing. The first photo will be your thumbnail.');
+    // Validate BOTH file and photos required
+    const missingItems = [];
+    if (!uploadedFile) missingItems.push('3D File (STL/STEP/OBJ)');
+    if (uploadedPhotos.length === 0) missingItems.push('At least 1 photo');
+    
+    if (missingItems.length > 0) {
+        alert('MISSING INFO:\n\n' + missingItems.map(m => '• ' + m).join('\n') + '\n\nBoth a 3D file AND photos are required to create a listing.');
         return;
     }
     
     const make = document.getElementById('partMake').value;
     const model = make === 'Non-Specific' ? 'Any' : document.getElementById('partModel').value;
     
-    const listing = {
-        title: document.getElementById('partTitle').value,
-        description: document.getElementById('partDesc').value,
-        make: make,
-        model: model,
-        category: document.getElementById('partCat').value,
-        price: parseFloat(document.getElementById('partPrice').value),
-        file_format: document.getElementById('partFormat').value,
-        material: document.getElementById('partMaterial').value,
-        infill: document.getElementById('partInfill').value,
-        featured: document.getElementById('featuredCheckbox').checked,
-        images: uploadedPhotos // Include uploaded photos
-    };
-    
     try {
+        // First upload the 3D file
+        const fileFormData = new FormData();
+        fileFormData.append('file', uploadedFile);
+        
+        const fileRes = await fetch(`${API_BASE}/api/upload/file`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            body: fileFormData
+        });
+        
+        if (!fileRes.ok) throw new Error('Failed to upload 3D file');
+        const fileData = await fileRes.json();
+        
+        const listing = {
+            title: document.getElementById('partTitle').value,
+            description: document.getElementById('partDesc').value,
+            make: make,
+            model: model,
+            category: document.getElementById('partCat').value,
+            price: parseFloat(document.getElementById('partPrice').value),
+            file_format: document.getElementById('partFormat').value || uploadedFile.name.split('.').pop().toUpperCase(),
+            file_size: (uploadedFile.size / (1024 * 1024)).toFixed(2) + ' MB',
+            file_url: fileData.url,
+            material: document.getElementById('partMaterial').value,
+            infill: document.getElementById('partInfill').value,
+            featured: document.getElementById('featuredCheckbox').checked,
+            images: uploadedPhotos
+        };
+        
         const result = await api('/api/parts', {
             method: 'POST',
             body: JSON.stringify(listing)
         });
         
-        // Clear uploaded photos after successful creation
+        // Clear uploaded data after successful creation
         uploadedPhotos = [];
+        uploadedFile = null;
         
         alert('Listing created! (Payment integration with Stripe coming soon)');
         go('dashboard');
@@ -946,19 +977,28 @@ async function profileView(id) {
     return `<div class="profile-page"><div class="profile-header"><div class="profile-avatar">${user.avatar_url ? `<img src="${user.avatar_url}">` : user.name.charAt(0)}</div><div><h1>${user.name}</h1><p>${user.role === 'designer' ? 'Designer' : 'Seller'}</p><p>${user.bio || ''}</p></div></div></div>`;
 }
 
-function cardHTML(p, showPremiered = false, showFeatured = false) {
+function cardHTML(p, showPremiered = false, showFeatured = false, showIncomplete = false) {
     // Use actual images - placeholder only shows part title on dark background
     const img = p.images?.[0] || p.img || `https://placehold.co/600x450/1a1a1a/444?text=${encodeURIComponent(p.title || 'Part')}`;
-    const cardClass = `card ${showFeatured || p.featured ? 'card-featured' : ''} ${showPremiered ? 'card-premiered' : ''}`;
+    const isIncomplete = p.status === 'incomplete';
+    const cardClass = `card ${showFeatured || p.featured ? 'card-featured' : ''} ${showPremiered ? 'card-premiered' : ''} ${isIncomplete ? 'card-incomplete' : ''}`;
+    
+    // Build missing info warning
+    let missingInfo = [];
+    if (!p.file_url) missingInfo.push('3D File');
+    if (!p.images || p.images.length === 0) missingInfo.push('Photos');
+    
     return `<div class="${cardClass}" onclick="go('part', ${p.id}); return false;">
         <div class="card-image">
             <img src="${img}" alt="${p.title}" onerror="this.onerror=null;this.src='https://placehold.co/600x450/1a1a1a/444?text=${encodeURIComponent(p.title || 'Part')}'">
             <span class="card-badge">${p.category || 'Part'}</span>
+            ${isIncomplete && showIncomplete ? `<span class="incomplete-badge">MISSING INFO</span>` : ''}
             ${showPremiered || p.premiered ? '<span class="premiered-badge">PREMIERED</span>' : ''}
             ${showFeatured || p.featured ? '<span class="featured-badge-card">FEATURED</span>' : ''}
         </div>
         <div class="card-body">
             <div class="card-title">${p.title}</div>
+            ${isIncomplete && showIncomplete ? `<div class="missing-info">Missing: ${missingInfo.join(', ')}</div>` : ''}
             <div class="card-meta">
                 <span class="card-cat">${p.make && p.make !== 'Non-Specific' ? p.make : ''}${p.model && p.model !== 'All' && p.model !== 'Any' ? ' ' + p.model : ''}</span>
                 <span class="card-price">$${(p.price || 0).toFixed(2)}</span>
