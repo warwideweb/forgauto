@@ -813,7 +813,7 @@ async function handleCreateListing(e) {
         const fileFormData = new FormData();
         fileFormData.append('file', uploadedFile);
         
-        const fileRes = await fetch(`${API_BASE}/api/upload/file`, {
+        const fileRes = await fetch(`${API_URL}/api/upload/file`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
             body: fileFormData
@@ -999,10 +999,29 @@ async function handleDesignerRequest(e, designerId) {
 }
 
 async function profileView(id) {
-    let user;
+    let user, userParts = [];
     try { user = await api(`/api/users/${id}`); } catch (e) { return '<p>User not found.</p>'; }
+    try { userParts = await api(`/api/parts?user=${id}`); } catch (e) { userParts = []; }
     
-    return `<div class="profile-page"><div class="profile-header"><div class="profile-avatar">${user.avatar_url ? `<img src="${user.avatar_url}">` : user.name.charAt(0)}</div><div><h1>${user.name}</h1><p>${user.role === 'designer' ? 'Designer' : 'Seller'}</p><p>${user.bio || ''}</p></div></div></div>`;
+    // Filter to only show active parts (not incomplete)
+    const activeParts = userParts.filter(p => p.status === 'active');
+    
+    return `<div class="profile-page">
+        <div class="profile-header">
+            <div class="profile-avatar">${user.avatar_url ? `<img src="${user.avatar_url}">` : user.name.charAt(0)}</div>
+            <div>
+                <h1>${user.name}</h1>
+                <p>${user.role === 'designer' ? 'Designer' : 'Seller'}</p>
+                <p>${user.bio || ''}</p>
+                <p class="profile-stats">${activeParts.length} listings</p>
+            </div>
+        </div>
+        ${activeParts.length ? `
+        <div class="section">
+            <div class="section-head"><h2>Listings by ${user.name}</h2></div>
+            <div class="grid">${activeParts.map(p => cardHTML(p)).join('')}</div>
+        </div>` : '<p class="empty-state">No listings yet.</p>'}
+    </div>`;
 }
 
 function cardHTML(p, showPremiered = false, showFeatured = false, showIncomplete = false) {
