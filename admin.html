@@ -378,32 +378,53 @@
         
         async function login() {
             adminKey = document.getElementById('adminKey').value;
-            if (!adminKey) return;
+            if (!adminKey) {
+                document.getElementById('loginError').textContent = 'Please enter admin key';
+                return;
+            }
+            
+            document.getElementById('loginError').textContent = 'Connecting...';
             
             try {
                 const res = await fetch(`${API}/api/admin/stats`, {
-                    headers: { 'X-Admin-Key': adminKey }
+                    method: 'GET',
+                    headers: { 
+                        'X-Admin-Key': adminKey,
+                        'Content-Type': 'application/json'
+                    }
                 });
                 
-                if (res.ok) {
+                const data = await res.json();
+                
+                if (res.ok && data.users !== undefined) {
                     localStorage.setItem('forgauto_admin_key', adminKey);
                     showDashboard();
                 } else {
-                    document.getElementById('loginError').textContent = 'Invalid admin key';
+                    document.getElementById('loginError').textContent = data.error || 'Invalid admin key';
                 }
             } catch (e) {
-                document.getElementById('loginError').textContent = 'Connection error';
+                console.error('Login error:', e);
+                document.getElementById('loginError').textContent = 'Connection error: ' + e.message;
             }
         }
         
         async function verifyAndLoad() {
             try {
                 const res = await fetch(`${API}/api/admin/stats`, {
-                    headers: { 'X-Admin-Key': adminKey }
+                    method: 'GET',
+                    headers: { 
+                        'X-Admin-Key': adminKey,
+                        'Content-Type': 'application/json'
+                    }
                 });
-                if (res.ok) showDashboard();
-                else logout();
+                if (res.ok) {
+                    showDashboard();
+                } else {
+                    console.log('Verify failed, logging out');
+                    logout();
+                }
             } catch (e) {
+                console.error('Verify error:', e);
                 logout();
             }
         }
