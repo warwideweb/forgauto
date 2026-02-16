@@ -86,19 +86,44 @@ const categories = [
     { name: "Lighting", img: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=300&h=300&fit=crop" }
 ];
 
-const carMakes = ["BMW", "Chevrolet", "Ford", "Honda", "Mazda", "Nissan", "Porsche", "Subaru", "Toyota", "Volkswagen", "Universal"];
+const carMakes = [
+    "Non-Specific",
+    "Acura", "Alfa Romeo", "Aston Martin", "Audi", "Bentley", "BMW", "Bugatti", 
+    "Buick", "Cadillac", "Chevrolet", "Chrysler", "Citroën", "Dacia", "Daewoo",
+    "Daihatsu", "Dodge", "Ferrari", "Fiat", "Ford", "Genesis", "GMC", "Honda",
+    "Hummer", "Hyundai", "Infiniti", "Isuzu", "Jaguar", "Jeep", "Kia", "Koenigsegg",
+    "Lamborghini", "Lancia", "Land Rover", "Lexus", "Lincoln", "Lotus", "Maserati",
+    "Mazda", "McLaren", "Mercedes-Benz", "Mercury", "MG", "Mini", "Mitsubishi",
+    "Nissan", "Oldsmobile", "Opel", "Pagani", "Peugeot", "Plymouth", "Polestar",
+    "Pontiac", "Porsche", "Ram", "Renault", "Rivian", "Rolls-Royce", "Saab",
+    "Saturn", "Scion", "Seat", "Skoda", "Smart", "Subaru", "Suzuki", "Tesla",
+    "Toyota", "Triumph", "Vauxhall", "Volkswagen", "Volvo"
+];
 const carModels = {
-    "BMW": ["E30", "E36", "E46", "E90", "F30", "F80"],
-    "Chevrolet": ["Camaro 5th Gen", "Camaro 6th Gen", "Corvette C7", "Corvette C8"],
-    "Ford": ["Mustang S197", "Mustang S550", "Focus RS", "F-150"],
-    "Honda": ["Civic EG", "Civic EK", "Civic FD", "S2000", "Integra", "NSX"],
-    "Mazda": ["Miata NA", "Miata NB", "Miata NC", "Miata ND", "RX-7 FD", "RX-8"],
-    "Nissan": ["350Z", "370Z", "GTR R35", "Silvia S13", "Silvia S14", "240SX"],
-    "Porsche": ["911 996", "911 997", "911 991", "Cayman 987", "Boxster"],
-    "Subaru": ["WRX", "STI", "BRZ", "Impreza", "Forester"],
-    "Toyota": ["Supra MK4", "Supra MK5", "AE86", "GR86", "Celica", "MR2"],
-    "Volkswagen": ["Golf MK4", "Golf MK5", "Golf MK6", "Golf MK7", "GTI", "R32"],
-    "Universal": ["All"]
+    "Non-Specific": ["Any"],
+    "Acura": ["Integra", "NSX", "RSX", "TL", "TSX", "MDX", "RDX"],
+    "Audi": ["A3", "A4", "A5", "A6", "A7", "A8", "Q3", "Q5", "Q7", "R8", "RS3", "RS4", "RS5", "RS6", "RS7", "S3", "S4", "S5", "TT"],
+    "BMW": ["E21", "E28", "E30", "E34", "E36", "E38", "E39", "E46", "E60", "E90", "E92", "F30", "F80", "F82", "G20", "G80", "M2", "M3", "M4", "M5", "Z3", "Z4"],
+    "Chevrolet": ["Camaro 3rd Gen", "Camaro 4th Gen", "Camaro 5th Gen", "Camaro 6th Gen", "Corvette C3", "Corvette C4", "Corvette C5", "Corvette C6", "Corvette C7", "Corvette C8", "Silverado", "S10", "Impala", "Nova"],
+    "Dodge": ["Challenger", "Charger", "Viper", "Dart", "Neon SRT-4", "Ram", "Durango"],
+    "Ferrari": ["308", "348", "355", "360", "430", "458", "488", "F40", "F50", "Enzo", "LaFerrari"],
+    "Ford": ["Mustang Fox Body", "Mustang SN95", "Mustang S197", "Mustang S550", "Focus RS", "Focus ST", "Fiesta ST", "F-150", "F-250", "Bronco", "GT", "Ranger"],
+    "Honda": ["Civic EF", "Civic EG", "Civic EK", "Civic EP3", "Civic FD", "Civic FK8", "Civic FL5", "Accord", "S2000", "Integra", "NSX", "Prelude", "CR-X", "Fit"],
+    "Hyundai": ["Genesis Coupe", "Veloster", "Elantra N", "Kona N", "Ioniq 5", "Ioniq 6"],
+    "Infiniti": ["G35", "G37", "Q50", "Q60", "FX35", "FX45"],
+    "Jeep": ["Wrangler JK", "Wrangler JL", "Cherokee XJ", "Grand Cherokee", "Gladiator"],
+    "Lamborghini": ["Countach", "Diablo", "Murcielago", "Gallardo", "Aventador", "Huracan", "Urus"],
+    "Lexus": ["IS300", "IS350", "IS-F", "GS300", "GS350", "GS-F", "RC-F", "LC500", "LFA", "SC300", "SC400"],
+    "Mazda": ["Miata NA", "Miata NB", "Miata NC", "Miata ND", "RX-7 FC", "RX-7 FD", "RX-8", "Mazda3", "Mazda6", "CX-5", "CX-30"],
+    "Mercedes-Benz": ["190E", "W201", "W124", "W140", "W202", "W203", "W204", "W205", "W212", "W213", "C63 AMG", "E63 AMG", "S63 AMG", "SL", "SLK", "AMG GT"],
+    "Mitsubishi": ["Evo 4", "Evo 5", "Evo 6", "Evo 7", "Evo 8", "Evo 9", "Evo X", "3000GT", "Eclipse", "Galant VR4"],
+    "Nissan": ["240SX S13", "240SX S14", "Silvia S15", "350Z", "370Z", "Z (400Z)", "GTR R32", "GTR R33", "GTR R34", "GTR R35", "300ZX", "Sentra SE-R", "Maxima"],
+    "Porsche": ["911 964", "911 993", "911 996", "911 997", "911 991", "911 992", "Cayman 987", "Cayman 981", "Cayman 718", "Boxster", "Cayenne", "Macan", "Panamera", "Taycan"],
+    "Subaru": ["Impreza GC", "Impreza GD", "Impreza GR", "Impreza VA", "WRX", "STI", "BRZ", "Forester", "Legacy", "Outback", "Crosstrek"],
+    "Tesla": ["Model S", "Model 3", "Model X", "Model Y", "Roadster", "Cybertruck"],
+    "Toyota": ["Supra MK3", "Supra MK4", "Supra MK5", "AE86", "GR86", "Celica", "MR2 AW11", "MR2 SW20", "MR2 ZZW30", "Camry", "Corolla", "4Runner", "Tacoma", "Tundra", "Land Cruiser", "GR Corolla", "GR Yaris"],
+    "Volkswagen": ["Golf MK1", "Golf MK2", "Golf MK3", "Golf MK4", "Golf MK5", "Golf MK6", "Golf MK7", "Golf MK8", "GTI", "R32", "Golf R", "Jetta", "Beetle", "Scirocco", "Corrado"],
+    "Volvo": ["240", "740", "850", "S40", "S60", "S90", "V60", "V90", "XC40", "XC60", "XC90"]
 };
 
 // Demo data (fallback)
@@ -650,7 +675,7 @@ function homeView() {
         </div>
 
         <div class="categories"><h2>Categories</h2>
-            <div class="cat-grid">${categories.map(c => `<a href="#" class="cat-item" onclick="filterCat='${c.name}';go('browse')"><img src="${c.img}" alt="${c.name}"><span>${c.name}</span></a>`).join('')}</div>
+            <div class="cat-grid">${categories.map(c => `<a href="#" class="cat-item" onclick="filterCat='${c.name}';go('browse'); return false;"><img src="${c.img}" alt="${c.name}"><span>${c.name}</span></a>`).join('')}</div>
         </div>
 
         <div class="section"><div class="section-head"><h2>Trending Parts</h2><a href="#" onclick="go('browse'); return false;">View all</a></div>
@@ -688,9 +713,9 @@ function browseView() {
     
     return `<div class="browse">
         <aside class="sidebar">
-            <h3>Category</h3><ul><li><a href="#" onclick="filterCat='';go('browse')" class="${!filterCat?'active':''}">All</a></li>${categories.map(c => `<li><a href="#" onclick="filterCat='${c.name}';go('browse')" class="${filterCat===c.name?'active':''}">${c.name}</a></li>`).join('')}</ul>
-            <h3>Make</h3><ul><li><a href="#" onclick="filterMake='';filterModel='';go('browse')" class="${!filterMake?'active':''}">All Makes</a></li>${carMakes.map(m => `<li><a href="#" onclick="filterMake='${m}';filterModel='';go('browse')" class="${filterMake===m?'active':''}">${m}</a></li>`).join('')}</ul>
-            ${filterMake && carModels[filterMake] ? `<h3>Model</h3><ul><li><a href="#" onclick="filterModel='';go('browse')" class="${!filterModel?'active':''}">All Models</a></li>${carModels[filterMake].map(m => `<li><a href="#" onclick="filterModel='${m}';go('browse')" class="${filterModel===m?'active':''}">${m}</a></li>`).join('')}</ul>` : ''}
+            <h3>Category</h3><ul><li><a href="#" onclick="filterCat='';go('browse'); return false;" class="${!filterCat?'active':''}">All</a></li>${categories.map(c => `<li><a href="#" onclick="filterCat='${c.name}';go('browse'); return false;" class="${filterCat===c.name?'active':''}">${c.name}</a></li>`).join('')}</ul>
+            <h3>Make</h3><ul><li><a href="#" onclick="filterMake='';filterModel='';go('browse'); return false;" class="${!filterMake?'active':''}">All Makes</a></li>${carMakes.map(m => `<li><a href="#" onclick="filterMake='${m}';filterModel='';go('browse'); return false;" class="${filterMake===m?'active':''}">${m}</a></li>`).join('')}</ul>
+            ${filterMake && carModels[filterMake] ? `<h3>Model</h3><ul><li><a href="#" onclick="filterModel='';go('browse'); return false;" class="${!filterModel?'active':''}">All Models</a></li>${carModels[filterMake].map(m => `<li><a href="#" onclick="filterModel='${m}';go('browse'); return false;" class="${filterModel===m?'active':''}">${m}</a></li>`).join('')}</ul>` : ''}
             <div class="sidebar-cta"><p>Don't have a printer?</p><a href="#" onclick="go('printshops'); return false;" class="btn btn-outline" style="width:100%">Find Print Shop</a></div>
         </aside>
         <div><div class="browse-head"><h1>${title}</h1><span style="color:var(--muted)">${filtered.length} parts</span></div>
@@ -719,12 +744,12 @@ function sellView() {
             <form onsubmit="handleCreateListing(event)">
             <div class="field"><label>Part Name</label><input type="text" id="partTitle" placeholder="e.g., BMW E30 Phone Mount" required></div>
             <div class="field"><label>Description</label><textarea id="partDesc" rows="4" placeholder="Describe fitment, materials..." required></textarea></div>
-            <div class="field-row"><div class="field"><label>Make</label><select id="partMake" required onchange="updatePartModels()">${carMakes.map(m => `<option>${m}</option>`).join('')}</select></div><div class="field"><label>Model</label><select id="partModel"><option>Select model...</option></select></div></div>
+            <div class="field-row" id="makeModelRow"><div class="field"><label>Make</label><select id="partMake" required onchange="updatePartModels()">${carMakes.map(m => `<option>${m}</option>`).join('')}</select></div><div class="field" id="modelField"><label>Model</label><select id="partModel"><option>Select model...</option></select></div></div>
             <div class="field-row"><div class="field"><label>Category</label><select id="partCat" required>${categories.map(c => `<option>${c.name}</option>`).join('')}</select></div><div class="field"><label>Price (USD)</label><input type="number" id="partPrice" placeholder="4.99" min="0.99" step="0.01" required></div></div>
-            <div class="field-row"><div class="field"><label>File Format</label><input type="text" id="partFormat" placeholder="STL, STEP"></div><div class="field"><label>File Size</label><input type="text" id="partSize" placeholder="2.1 MB"></div></div>
-            <div class="field-row"><div class="field"><label>Recommended Material</label><input type="text" id="partMaterial" placeholder="PLA, PETG, ABS"></div><div class="field"><label>Infill %</label><input type="text" id="partInfill" placeholder="25%"></div></div>
+            <div class="field-row"><div class="field"><label>File Format</label><input type="text" id="partFormat" placeholder="STL, STEP"></div><div class="field"><label>Recommended Material</label><input type="text" id="partMaterial" placeholder="PLA, PETG, ABS"></div></div>
+            <div class="field"><label>Infill % (recommended)</label><input type="text" id="partInfill" placeholder="25%"></div>
             <div class="field"><label>3D File</label><div class="dropzone" onclick="document.getElementById('fileInput').click()"><div class="dropzone-icon">+</div><p id="fileName">Drop 3D file here or click</p><span>STL, STEP, OBJ, 3MF</span></div><input type="file" id="fileInput" hidden onchange="handleFileSelect(event)"></div>
-            <div class="field"><label>Photos</label><div class="photo-grid" id="photoGrid"><div class="photo-add" onclick="document.getElementById('photoInput').click()"><span class="photo-add-icon">+</span><span>Add</span></div></div><input type="file" id="photoInput" accept="image/*" multiple hidden onchange="handlePhotoUpload(event)"></div>
+            <div class="field"><label>Photos <span class="required-star">*</span> (First photo = thumbnail)</label><div class="photo-grid" id="photoGrid"><div class="photo-add" onclick="document.getElementById('photoInput').click()"><span class="photo-add-icon">+</span><span>Add</span></div></div><input type="file" id="photoInput" accept="image/*" multiple hidden onchange="handlePhotoUpload(event)"><p class="field-hint">At least 1 photo required</p></div>
             <div class="upsell-box"><label class="upsell-label"><input type="checkbox" id="featuredCheckbox" onchange="updateTotal()"><div class="upsell-content"><span class="upsell-badge">FEATURED</span><strong>Get Featured Placement +$10</strong><p>Your listing appears in the Featured section for 30 days.</p></div></label></div>
             <div class="form-total"><span>Total</span><span id="totalPrice">$5.00</span></div>
             <button type="submit" class="btn btn-lg btn-primary" style="width:100%">Create Listing</button>
@@ -736,7 +761,17 @@ function sellView() {
 function updatePartModels() {
     const make = document.getElementById('partMake')?.value;
     const modelSelect = document.getElementById('partModel');
+    const modelField = document.getElementById('modelField');
     if (!modelSelect || !make) return;
+    
+    // Hide model field for Non-Specific
+    if (make === 'Non-Specific') {
+        if (modelField) modelField.style.display = 'none';
+        modelSelect.value = 'Any';
+        return;
+    } else {
+        if (modelField) modelField.style.display = 'block';
+    }
     modelSelect.innerHTML = '<option>Select model...</option>';
     if (carModels[make]) carModels[make].forEach(m => { modelSelect.innerHTML += `<option value="${m}">${m}</option>`; });
 }
@@ -749,18 +784,27 @@ function handleFileSelect(e) {
 async function handleCreateListing(e) {
     e.preventDefault();
     
+    // Validate at least one photo
+    if (uploadedPhotos.length === 0) {
+        alert('Please add at least one photo for your listing. The first photo will be your thumbnail.');
+        return;
+    }
+    
+    const make = document.getElementById('partMake').value;
+    const model = make === 'Non-Specific' ? 'Any' : document.getElementById('partModel').value;
+    
     const listing = {
         title: document.getElementById('partTitle').value,
         description: document.getElementById('partDesc').value,
-        make: document.getElementById('partMake').value,
-        model: document.getElementById('partModel').value,
+        make: make,
+        model: model,
         category: document.getElementById('partCat').value,
         price: parseFloat(document.getElementById('partPrice').value),
         file_format: document.getElementById('partFormat').value,
-        file_size: document.getElementById('partSize').value,
         material: document.getElementById('partMaterial').value,
         infill: document.getElementById('partInfill').value,
-        featured: document.getElementById('featuredCheckbox').checked
+        featured: document.getElementById('featuredCheckbox').checked,
+        images: uploadedPhotos // Include uploaded photos
     };
     
     try {
@@ -768,6 +812,10 @@ async function handleCreateListing(e) {
             method: 'POST',
             body: JSON.stringify(listing)
         });
+        
+        // Clear uploaded photos after successful creation
+        uploadedPhotos = [];
+        
         alert('Listing created! (Payment integration with Stripe coming soon)');
         go('dashboard');
     } catch (err) {
@@ -897,7 +945,7 @@ async function profileView(id) {
 function cardHTML(p, showTrending = false, showFeatured = false) {
     const img = p.images?.[0] || p.img || `https://placehold.co/600x450/1a1a1a/666?text=${encodeURIComponent(p.title || 'Part')}`;
     const cardClass = `card ${showFeatured || p.featured ? 'card-featured' : ''} ${showTrending ? 'card-trending' : ''}`;
-    return `<div class="${cardClass}" onclick="go('part', ${p.id})">
+    return `<div class="${cardClass}" onclick="go('part', ${p.id}); return false;">
         <div class="card-image">
             <img src="${img}" alt="${p.title}" onerror="this.src='https://placehold.co/600x450/1a1a1a/666?text=No+Image'">
             <span class="card-badge">${p.category || 'Part'}</span>
@@ -907,7 +955,7 @@ function cardHTML(p, showTrending = false, showFeatured = false) {
         <div class="card-body">
             <div class="card-title">${p.title}</div>
             <div class="card-meta">
-                <span class="card-cat">${p.make}${p.model && p.model !== 'All' ? ' ' + p.model : ''}</span>
+                <span class="card-cat">${p.make && p.make !== 'Non-Specific' ? p.make : ''}${p.model && p.model !== 'All' && p.model !== 'Any' ? ' ' + p.model : ''}</span>
                 <span class="card-price">$${(p.price || 0).toFixed(2)}</span>
             </div>
         </div>
