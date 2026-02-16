@@ -186,7 +186,9 @@ async function render(data) {
     else if (view === 'printshops') app.innerHTML = printShopsView(data);
     else if (view === 'login') app.innerHTML = loginView();
     else if (view === 'signup') app.innerHTML = signupView();
+    else if (view === 'forgot-password') app.innerHTML = forgotPasswordView();
     else if (view === 'dashboard') app.innerHTML = await dashboardView();
+    else if (view === 'conversation') app.innerHTML = await conversationView(data);
     else if (view === 'profile') app.innerHTML = await profileView(data);
 }
 
@@ -215,8 +217,99 @@ function loginView() {
                 <button type="submit" class="btn btn-lg btn-primary" style="width:100%">Login with Email</button>
             </form>
             <p class="auth-switch">Don't have an account? <a href="#" onclick="go('signup')">Sign up</a></p>
+            <p class="auth-switch"><a href="#" onclick="go('forgot-password')">Forgot your password?</a></p>
         </div>
     </div>`;
+}
+
+function forgotPasswordView() {
+    return `<div class="auth-container">
+        <div class="auth-box">
+            <h1>Reset Password</h1>
+            <p>Enter your email to receive a reset link</p>
+            
+            <form onsubmit="handleForgotPassword(event)">
+                <div class="field"><label>Email</label><input type="email" id="forgotEmail" required></div>
+                <div id="forgotMessage" class="success-msg" style="display:none"></div>
+                <div id="forgotError" class="error-msg"></div>
+                <button type="submit" class="btn btn-lg btn-primary" style="width:100%">Send Reset Link</button>
+            </form>
+            <p class="auth-switch"><a href="#" onclick="go('login')">← Back to Login</a></p>
+        </div>
+    </div>`;
+}
+
+async function handleForgotPassword(e) {
+    e.preventDefault();
+    const email = document.getElementById('forgotEmail').value;
+    
+    try {
+        const data = await api('/api/auth/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify({ email })
+        });
+        document.getElementById('forgotMessage').style.display = 'block';
+        document.getElementById('forgotMessage').textContent = data.message;
+        document.getElementById('forgotError').textContent = '';
+    } catch (err) {
+        document.getElementById('forgotError').textContent = err.message;
+    }
+}
+
+async function conversationView(userId) {
+    if (!currentUser) return loginView();
+    
+    let conversation = { user: null, messages: [] };
+    try {
+        conversation = await api(`/api/messages/${userId}`);
+    } catch (e) {
+        return '<p class="error">Could not load conversation.</p>';
+    }
+    
+    const otherUser = conversation.user || { name: 'User', avatar_url: null };
+    const messages = conversation.messages || [];
+    
+    return `<div class="conversation-page">
+        <div class="conversation-header">
+            <a href="#" onclick="go('dashboard')" class="back-btn">← Back</a>
+            <div class="conversation-user">
+                <div class="user-avatar-sm">${otherUser.avatar_url ? `<img src="${otherUser.avatar_url}">` : otherUser.name.charAt(0)}</div>
+                <strong>${otherUser.name}</strong>
+            </div>
+        </div>
+        
+        <div class="messages-container" id="messagesContainer">
+            ${messages.length ? messages.map(m => `
+                <div class="message ${m.sender_id === currentUser.id ? 'message-sent' : 'message-received'}">
+                    <div class="message-content">${m.content}</div>
+                    <div class="message-time">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                </div>
+            `).join('') : '<p class="empty-state">No messages yet. Start the conversation!</p>'}
+        </div>
+        
+        <form class="message-form" onsubmit="sendMessage(event, ${userId})">
+            <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off" required>
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+    </div>`;
+}
+
+async function sendMessage(e, recipientId) {
+    e.preventDefault();
+    const content = document.getElementById('messageInput').value.trim();
+    if (!content) return;
+    
+    try {
+        await api('/api/messages', {
+            method: 'POST',
+            body: JSON.stringify({ recipient_id: recipientId, content })
+        });
+        document.getElementById('messageInput').value = '';
+        // Refresh conversation
+        go('conversation', recipientId);
+    } catch (err) {
+        alert('Error sending message: ' + err.message);
+    }
 }
 
 function signupView() {
@@ -306,7 +399,7 @@ async function handleLogout() {
 async function dashboardView() {
     if (!currentUser) return loginView();
     
-    let myParts = [], mySales = [], myPurchases = [];
+    let myParts = [], mySales = [], myPurchases = [], myMessages = [], unreadCount = 0;
     try {
         myParts = await api('/api/parts?user=' + currentUser.id);
     } catch (e) { myParts = []; }
@@ -316,6 +409,13 @@ async function dashboardView() {
     try {
         myPurchases = await api('/api/purchases');
     } catch (e) { myPurchases = []; }
+    try {
+        myMessages = await api('/api/messages');
+    } catch (e) { myMessages = []; }
+    try {
+        const unreadData = await api('/api/messages/unread');
+        unreadCount = unreadData.unread || 0;
+    } catch (e) { unreadCount = 0; }
     
     return `<div class="dashboard">
         <div class="dashboard-header">
@@ -334,6 +434,7 @@ async function dashboardView() {
         
         <div class="dashboard-nav">
             <button class="dash-tab active" onclick="showDashTab('listings')">My Listings</button>
+            <button class="dash-tab" onclick="showDashTab('messages')">Messages ${unreadCount > 0 ? `<span class="badge-unread">${unreadCount}</span>` : ''}</button>
             <button class="dash-tab" onclick="showDashTab('sales')">Sales</button>
             <button class="dash-tab" onclick="showDashTab('purchases')">Purchases</button>
             <button class="dash-tab" onclick="showDashTab('settings')">Settings</button>
@@ -342,6 +443,23 @@ async function dashboardView() {
         <div id="dashListings" class="dash-content">
             <h2>My Listings (${myParts.length})</h2>
             ${myParts.length ? `<div class="grid">${myParts.map(cardHTML).join('')}</div>` : '<p class="empty-state">No listings yet. <a href="#" onclick="go(\'sell\')">Create your first listing</a></p>'}
+        </div>
+        
+        <div id="dashMessages" class="dash-content" style="display:none">
+            <h2>Messages</h2>
+            ${myMessages.length ? `<div class="messages-list">${myMessages.map(m => `
+                <div class="message-preview" onclick="go('conversation', ${m.other_user_id})">
+                    <div class="message-avatar">${m.other_user_avatar ? `<img src="${m.other_user_avatar}">` : (m.other_user_name || '?').charAt(0)}</div>
+                    <div class="message-info">
+                        <div class="message-header">
+                            <strong>${m.other_user_name || 'User'}</strong>
+                            <span class="message-time">${new Date(m.last_message_at).toLocaleDateString()}</span>
+                        </div>
+                        <p class="message-snippet">${m.last_message || ''}</p>
+                    </div>
+                    ${m.unread_count > 0 ? `<span class="unread-badge">${m.unread_count}</span>` : ''}
+                </div>
+            `).join('')}</div>` : '<p class="empty-state">No messages yet. Start a conversation by contacting a seller!</p>'}
         </div>
         
         <div id="dashSales" class="dash-content" style="display:none">
