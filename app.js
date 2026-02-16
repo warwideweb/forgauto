@@ -158,7 +158,42 @@ async function loadDesigners() {
     }
 }
 
-function go(v, data) { view = v; render(data); window.scrollTo(0, 0); }
+function go(v, data, skipHistory = false) { 
+    view = v; 
+    if (!skipHistory) {
+        const url = data ? `#${v}/${data}` : `#${v}`;
+        history.pushState({ view: v, data: data }, '', url);
+    }
+    render(data); 
+    window.scrollTo(0, 0); 
+}
+
+// Handle browser back/forward buttons
+window.addEventListener('popstate', (e) => {
+    if (e.state) {
+        go(e.state.view, e.state.data, true);
+    } else {
+        // Parse URL hash if no state
+        const hash = window.location.hash.slice(1);
+        if (hash) {
+            const [v, d] = hash.split('/');
+            go(v || 'home', d ? parseInt(d) : null, true);
+        } else {
+            go('home', null, true);
+        }
+    }
+});
+
+// Handle initial page load from URL hash
+function initFromHash() {
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+        const [v, d] = hash.split('/');
+        view = v || 'home';
+        return d ? parseInt(d) : null;
+    }
+    return null;
+}
 function search(e) { if (e.key === 'Enter') { filter = e.target.value; go('browse'); } }
 function doSearch() {
     filter = document.getElementById('heroSearch')?.value || '';
@@ -916,4 +951,10 @@ function initViewer(partId) {
 
 // Initialize
 console.log(`ForgAuto v${VERSION} loaded`);
-checkAuth().then(() => render());
+// Initialize app
+checkAuth().then(() => {
+    const initialData = initFromHash();
+    // Set initial state in history
+    history.replaceState({ view, data: initialData }, '', window.location.hash || '#home');
+    render(initialData);
+});
