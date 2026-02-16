@@ -357,6 +357,19 @@ async function dashboardView() {
         <div id="dashSettings" class="dash-content" style="display:none">
             <h2>Profile Settings</h2>
             <form onsubmit="handleProfileUpdate(event)" class="settings-form">
+                <div class="field">
+                    <label>Profile Photo</label>
+                    <div class="avatar-upload">
+                        <div class="avatar-preview" id="avatarPreview">
+                            ${currentUser.avatar_url ? `<img src="${currentUser.avatar_url}" alt="Avatar">` : `<span>${currentUser.name.charAt(0)}</span>`}
+                        </div>
+                        <div class="avatar-actions">
+                            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('avatarInput').click()">Change Photo</button>
+                            <input type="file" id="avatarInput" accept="image/*" hidden onchange="handleAvatarUpload(event)">
+                            <span class="avatar-hint">JPG, PNG, GIF. Max 5MB.</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="field"><label>Name</label><input type="text" id="settingsName" value="${currentUser.name}"></div>
                 <div class="field"><label>Bio</label><textarea id="settingsBio" rows="3">${currentUser.bio || ''}</textarea></div>
                 ${currentUser.role === 'designer' ? `
@@ -393,6 +406,51 @@ async function handleProfileUpdate(e) {
         alert('Profile updated!');
     } catch (err) {
         alert('Error: ' + err.message);
+    }
+}
+
+async function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+    }
+    
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Image must be under 5MB');
+        return;
+    }
+    
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('avatarPreview').innerHTML = `<img src="${e.target.result}" alt="Avatar">`;
+    };
+    reader.readAsDataURL(file);
+    
+    // Upload to server
+    try {
+        const res = await fetch(`${API_URL}/api/profile/avatar`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': file.type
+            },
+            body: file
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Upload failed');
+        
+        currentUser.avatar_url = data.avatar_url;
+        updateNavAuth();
+        alert('Profile photo updated!');
+    } catch (err) {
+        alert('Error uploading photo: ' + err.message);
     }
 }
 
