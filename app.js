@@ -849,11 +849,14 @@ async function handleCreateListing(e) {
         
         const fileRes = await fetch(`${API_URL}/api/upload/file`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            headers: { 'Authorization': `Bearer ${authToken}` },
             body: fileFormData
         });
         
-        if (!fileRes.ok) throw new Error('Failed to upload 3D file');
+        if (!fileRes.ok) {
+            const errData = await fileRes.json().catch(() => ({}));
+            throw new Error(errData.error || 'Failed to upload 3D file');
+        }
         const fileData = await fileRes.json();
         
         const listing = {
