@@ -4648,9 +4648,16 @@ async function connectStripeAccount() {
     try {
         const res = await api('/api/stripe/connect-account', { method: 'POST' });
         if (res && res.url) {
-            window.location.href = res.url;
+            if (res.dashboard) {
+                // Already onboarded - open dashboard
+                window.open(res.url, '_blank');
+                alert('Your Stripe account is already set up! Opening your dashboard...');
+            } else {
+                // Continue onboarding
+                window.location.href = res.url;
+            }
         } else if (res && res.onboarded) {
-            alert('Your Stripe account is already connected!');
+            alert(res.message || 'Your Stripe account is already connected!');
         }
     } catch (e) {
         alert('Error connecting Stripe: ' + e.message);
