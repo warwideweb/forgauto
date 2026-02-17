@@ -1,8 +1,19 @@
 // ForgAuto — 3D Marketplace for Cars
 // Version 4.0 - Major Fixes
 
-const VERSION = '7.3';
+const VERSION = '7.4';
 const API_URL = 'https://forgauto-api.warwideweb.workers.dev'; // Cloudflare Worker API
+
+// v7.4: HTML sanitization to prevent XSS attacks
+function sanitize(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+}
 
 // State
 let currentUser = null;
@@ -199,22 +210,11 @@ const demoParts = [
     { id: 8, title: "Subaru WRX Shift Surround", category: "Interior", make: "Subaru", model: "WRX", price: 4.99, images: ["https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=600&h=450&fit=crop"], seller_name: "SubieParts", seller_email: "subie@example.com", description: "Custom shift boot surround for GD WRX.", file_format: "STL", file_size: "1.4 MB", material: "PETG", infill: "25%", downloads: 456 }
 ];
 
-const demoDesigners = [
-    { id: 1, name: "Alex Chen", role: "designer", avatar_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop", bio: "10+ years designing aftermarket auto parts. Fusion 360 and SolidWorks expert.", rate: "$50/hr", tags: ["JDM", "European", "Interior"], stats: { avgRating: 4.9, reviewCount: 47, parts: 127 } },
-    { id: 2, name: "Mike Rodriguez", role: "designer", avatar_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop", bio: "JDM enthusiast with 200+ parts designed.", rate: "$40/hr", tags: ["Honda", "Toyota", "Nissan"], stats: { avgRating: 4.8, reviewCount: 89, parts: 213 } },
-    { id: 3, name: "Sarah Miller", role: "designer", avatar_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop", bio: "Former BMW interior designer. Premium-feel parts.", rate: "$45/hr", tags: ["Interior", "Trim", "Luxury"], stats: { avgRating: 5.0, reviewCount: 34, parts: 89 } },
-    { id: 4, name: "James Park", role: "designer", avatar_url: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop", bio: "Ex-Tesla engineer. Functional aero and cooling parts.", rate: "$55/hr", tags: ["Performance", "Aero"], stats: { avgRating: 4.7, reviewCount: 28, parts: 78 } },
-    { id: 5, name: "Emily Watson", role: "designer", avatar_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop", bio: "European car specialist. Perfect fitment guaranteed.", rate: "$45/hr", tags: ["BMW", "VW", "Porsche"], stats: { avgRating: 4.9, reviewCount: 62, parts: 156 } },
-    { id: 6, name: "David Kim", role: "designer", avatar_url: "https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=200&h=200&fit=crop", bio: "Muscle car enthusiast. Mustangs and Camaros.", rate: "$40/hr", tags: ["Mustang", "Camaro"], stats: { avgRating: 4.8, reviewCount: 41, parts: 98 } }
-];
+// v7.4: Removed fake demo data - show empty states instead
+const demoDesigners = [];
+const printShops = [];
 
-const printShops = [
-    { name: "3D Print Lab Bangkok", address: "123 Sukhumvit Rd, Bangkok", distance: "2.3 km", rating: 4.8, reviews: 156, phone: "+66 2 123 4567", email: "contact@3dprintlab.th", verified: true, instantQuote: true, printAndShip: true, turnaround: "2-3 days" },
-    { name: "MakerSpace BKK", address: "456 Silom Rd, Bangkok", distance: "4.1 km", rating: 4.6, reviews: 89, phone: "+66 2 234 5678", email: "hello@makerspace.co.th", verified: true, instantQuote: true, printAndShip: false, turnaround: "3-5 days" },
-    { name: "Proto3D Thailand", address: "789 Rama IV, Bangkok", distance: "5.8 km", rating: 4.9, reviews: 234, phone: "+66 2 345 6789", email: "orders@proto3d.th", verified: true, instantQuote: true, printAndShip: true, turnaround: "1-2 days" }
-];
-
-let view = 'home', filter = '', filterCat = '', filterMake = '', filterModel = '', uploadedPhotos = [], uploadedPhotoFiles = [], uploadedFile = null;
+let view = 'home', filter = '', filterCat = '', filterMake = '', filterModel = '', filterSort = 'newest', uploadedPhotos = [], uploadedPhotoFiles = [], uploadedFile = null;
 // v6.3: Start with empty array, no demo parts
 let parts = [];
 let designers = demoDesigners;
@@ -243,9 +243,10 @@ async function loadParts() {
 async function loadDesigners() {
     try {
         const data = await api('/api/designers');
-        designers = data.length ? data : demoDesigners;
+        // v7.4: No more fake demo data - show empty state instead
+        designers = data || [];
     } catch (e) {
-        designers = demoDesigners;
+        designers = [];
     }
 }
 
@@ -256,7 +257,24 @@ function go(v, data, skipHistory = false) {
         history.pushState({ view: v, data: data }, '', url);
     }
     render(data); 
-    window.scrollTo(0, 0); 
+    window.scrollTo(0, 0);
+    updatePageTitle(v, data);
+}
+
+// v7.4: Dynamic page titles for SEO
+function updatePageTitle(v, data) {
+    const titles = {
+        home: 'ForgAuto — 3D Parts for Cars',
+        browse: 'Browse 3D Car Parts — ForgAuto',
+        designers: 'Hire a 3D Designer — ForgAuto',
+        printshops: 'Find Print Shops — ForgAuto',
+        sell: 'Sell Your Parts — ForgAuto',
+        login: 'Login — ForgAuto',
+        signup: 'Sign Up — ForgAuto',
+        dashboard: 'Dashboard — ForgAuto',
+        'become-designer': 'Become a Designer — ForgAuto'
+    };
+    document.title = titles[v] || 'ForgAuto — 3D Parts for Cars';
 }
 
 // Handle browser back/forward buttons
@@ -343,6 +361,45 @@ async function render(data) {
     else if (view === 'dashboard') app.innerHTML = await dashboardView();
     else if (view === 'conversation') app.innerHTML = await conversationView(data);
     else if (view === 'profile') app.innerHTML = await profileView(data);
+    else if (view === 'verify') app.innerHTML = await verifyEmailView(data);
+}
+
+// v7.4: Email verification view
+async function verifyEmailView(token) {
+    if (!token) {
+        return '<div class="auth-container"><div class="auth-box"><h1>Invalid Link</h1><p>This verification link is invalid.</p></div></div>';
+    }
+    
+    try {
+        const result = await api(`/api/auth/verify/${token}`);
+        // Refresh user data if logged in
+        if (authToken) {
+            await checkAuth();
+        }
+        return `<div class="auth-container"><div class="auth-box">
+            <div style="text-align:center;font-size:48px;margin-bottom:16px;">✅</div>
+            <h1>Email Verified!</h1>
+            <p>Your email has been verified successfully. You now have full access to ForgAuto.</p>
+            <a href="#" onclick="go('dashboard'); return false;" class="btn btn-primary" style="width:100%;margin-top:16px;">Go to Dashboard</a>
+        </div></div>`;
+    } catch (e) {
+        return `<div class="auth-container"><div class="auth-box">
+            <div style="text-align:center;font-size:48px;margin-bottom:16px;">❌</div>
+            <h1>Verification Failed</h1>
+            <p>${e.message || 'This link may have expired. Please request a new verification email.'}</p>
+            ${currentUser ? `<button onclick="resendVerification()" class="btn btn-primary" style="width:100%;margin-top:16px;">Resend Verification</button>` : `<a href="#" onclick="go('login'); return false;" class="btn btn-primary" style="width:100%;margin-top:16px;">Login</a>`}
+        </div></div>`;
+    }
+}
+
+// v7.4: Resend verification email
+async function resendVerification() {
+    try {
+        await api('/api/auth/resend-verification', { method: 'POST' });
+        alert('Verification email sent! Check your inbox.');
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
 }
 
 // v7.3: Mobile sticky buy bar
@@ -372,6 +429,60 @@ async function addMobileStickyBuyBar(partId) {
 
 function openLightbox(src) { document.getElementById('lightbox').classList.add('active'); document.getElementById('lightboxImg').src = src; }
 function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
+
+// v7.4: Report modal
+function openReportModal(targetType, targetId) {
+    const modal = document.createElement('div');
+    modal.id = 'reportModal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box report-modal">
+            <button class="modal-close" onclick="closeReportModal()">×</button>
+            <h2>Report ${targetType === 'part' ? 'Listing' : targetType === 'designer' ? 'Designer' : 'Print Shop'}</h2>
+            <p style="color:var(--muted);margin-bottom:16px;">Help us keep ForgAuto safe. Select a reason below.</p>
+            <form onsubmit="submitReport(event, '${targetType}', ${targetId})">
+                <div class="field">
+                    <label>Reason</label>
+                    <select id="reportReason" required>
+                        <option value="">Select a reason...</option>
+                        <option value="inappropriate">Inappropriate content</option>
+                        <option value="copyright">Copyright infringement</option>
+                        <option value="fake">Fake/misleading listing</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Details (optional)</label>
+                    <textarea id="reportDetails" rows="3" placeholder="Provide any additional details..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%">Submit Report</button>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function closeReportModal() {
+    const modal = document.getElementById('reportModal');
+    if (modal) modal.remove();
+}
+
+async function submitReport(e, targetType, targetId) {
+    e.preventDefault();
+    const reason = document.getElementById('reportReason').value;
+    const details = document.getElementById('reportDetails').value;
+    
+    try {
+        await api('/api/report', {
+            method: 'POST',
+            body: JSON.stringify({ target_type: targetType, target_id: targetId, reason, details })
+        });
+        closeReportModal();
+        alert('Report submitted. Thank you for helping keep ForgAuto safe.');
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
 
 // ========== AUTH VIEWS ==========
 
@@ -480,7 +591,7 @@ async function conversationView(userId) {
                 </div>
                 ${data.messages.map(m => `
                     <div class="message ${m.sender_id === currentUser.id ? 'message-sent' : 'message-received'}">
-                        <div class="message-content">${m.content}</div>
+                        <div class="message-content">${sanitize(m.content)}</div>
                         <div class="message-time">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                     </div>
                 `).join('')}
@@ -492,7 +603,7 @@ async function conversationView(userId) {
     if (noPart.length) {
         messagesHTML += noPart.map(m => `
             <div class="message ${m.sender_id === currentUser.id ? 'message-sent' : 'message-received'}">
-                <div class="message-content">${m.content}</div>
+                <div class="message-content">${sanitize(m.content)}</div>
                 <div class="message-time">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
             </div>
         `).join('');
@@ -865,7 +976,16 @@ async function dashboardView() {
     
     const roleLabels = { seller: 'Seller', designer: 'Designer', printshop: 'Print Shop' };
     
+    // v7.4: Check email verification status
+    const needsVerification = currentUser && currentUser.email_verified === false;
+    
     return `<div class="dashboard">
+        ${needsVerification ? `
+        <div class="verification-banner">
+            <span>📧 Please verify your email to create listings and make purchases.</span>
+            <button onclick="resendVerification()" class="btn btn-sm">Resend Email</button>
+        </div>
+        ` : ''}
         <div class="dashboard-header">
             <div class="dashboard-user">
                 <div class="user-avatar">${currentUser.avatar_url ? `<img src="${currentUser.avatar_url}">` : (currentUser.printshop?.shop_name || currentUser.name).charAt(0)}</div>
@@ -1907,18 +2027,12 @@ function homeView() {
         </div>
 
         <div class="section featured-designers"><div class="section-head"><h2>Top Designers</h2><a href="#" onclick="go('designers'); return false;">View all</a></div>
-            <div class="designers-preview">${designers.slice(0, 3).map(d => `<div class="designer-mini" onclick="go('designer', ${d.id})"><img src="${d.avatar_url}" alt="${d.name}"><div class="designer-mini-info"><strong>${d.name}</strong><span>${d.bio?.substring(0, 50)}...</span><span class="designer-mini-rate">${d.rate} - ${d.stats?.avgRating || 5} stars</span></div></div>`).join('')}</div>
+            <div class="designers-preview">${designers.filter(d => d && d.name && d.avatar_url && d.bio).slice(0, 3).map(d => `<div class="designer-mini" onclick="go('designer', ${d.id})"><img src="${d.avatar_url}" alt="${d.name}"><div class="designer-mini-info"><strong>${d.name}</strong><span>${d.bio.substring(0, 50)}...</span>${d.stats?.avgRating ? `<span class="designer-mini-rate">${d.rate || ''} - ${d.stats.avgRating} stars</span>` : (d.rate ? `<span class="designer-mini-rate">${d.rate}</span>` : '')}</div></div>`).join('') || '<p class="empty-state">No designers yet — <a href="#" onclick="go(\'become-designer\'); return false;">be the first!</a></p>'}</div>
         </div>
 
-        <div class="stats-bar">
-            <div class="stat"><span class="stat-num">${validParts.length}</span><span class="stat-label">${validParts.length === 1 ? 'Part' : 'Parts'} Listed</span></div>
-            <div class="stat"><span class="stat-num">${demoDesigners.length}</span><span class="stat-label">${demoDesigners.length === 1 ? 'Designer' : 'Designers'}</span></div>
-            <div class="stat"><span class="stat-num">${carMakes.length - 1}</span><span class="stat-label">Car Brands</span></div>
-            <div class="stat"><span class="stat-num">$10</span><span class="stat-label">Flat Fee</span></div>
-        </div>
-        <div class="version-tag">v${VERSION}</div>
     `;
 }
+// v7.4: Removed stats-bar and version-tag from homepage
 
 // Pagination state
 let currentPage = 1;
@@ -1933,7 +2047,19 @@ function browseView() {
     if (filterModel) filtered = filtered.filter(p => p.model === filterModel);
     const title = filterMake && filterModel ? `${filterMake} ${filterModel}` : filterMake ? filterMake : filterCat ? filterCat : filter ? `"${filter}"` : 'All Parts';
     
-    // v5.0: Sort featured parts to top
+    // v7.4: Apply user-selected sort
+    if (filterSort === 'price-low') {
+        filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+    } else if (filterSort === 'price-high') {
+        filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+    } else if (filterSort === 'popular') {
+        filtered.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
+    } else {
+        // Default: newest first (by created_at or id)
+        filtered.sort((a, b) => (b.id || 0) - (a.id || 0));
+    }
+    
+    // v5.0: Sort featured parts to top (after user sort)
     const featuredParts = filtered.filter(p => p.featured || p.premiered);
     const regularParts = filtered.filter(p => !p.featured && !p.premiered);
     const sortedParts = [...featuredParts, ...regularParts];
@@ -1971,7 +2097,14 @@ function browseView() {
             </select>` : ''}
             <div class="sidebar-cta"><p>Don't have a printer?</p><a href="#" onclick="go('printshops'); return false;" class="btn btn-outline" style="width:100%">Find Print Shop</a></div>
         </aside>
-        <div class="browse-main"><div class="browse-head"><h1>${title}</h1><span style="color:var(--muted)">${sortedParts.length} parts</span></div>
+        <div class="browse-main"><div class="browse-head"><h1>${title}</h1><span style="color:var(--muted)">${sortedParts.length} parts</span>
+            <select class="sort-select" onchange="filterSort=this.value;currentPage=1;go('browse');">
+                <option value="newest" ${filterSort==='newest'?'selected':''}>Newest First</option>
+                <option value="price-low" ${filterSort==='price-low'?'selected':''}>Price: Low to High</option>
+                <option value="price-high" ${filterSort==='price-high'?'selected':''}>Price: High to Low</option>
+                <option value="popular" ${filterSort==='popular'?'selected':''}>Most Popular</option>
+            </select>
+        </div>
             ${featuredParts.length > 0 && currentPage === 1 ? `<div class="browse-featured-label"><span>★</span> Featured Listings</div>` : ''}
             <div class="grid grid-wide">${paginatedParts.length ? paginatedParts.map(cardHTML).join('') : '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:48px 0;">No parts found.</p>'}</div>
             ${totalPages > 1 ? `
@@ -2011,13 +2144,8 @@ let designerFilterLocation = '';
 let designerSortBy = 'rating'; // rating, parts, rate
 
 function designersView() {
-    // Filter out invalid designers - if none valid, use demo data
+    // v7.4: Filter out invalid designers - show empty state if none
     let validDesigners = designers.filter(d => d.name && d.name !== 'undefined' && d.avatar_url && d.avatar_url.startsWith('http'));
-    
-    // Fall back to demo designers if API returned garbage
-    if (validDesigners.length === 0) {
-        validDesigners = demoDesigners;
-    }
     
     // v6.0: Apply filters
     let filtered = validDesigners.filter(d => {
@@ -2080,6 +2208,10 @@ function designersView() {
             
             ${filtered.length ? `<div class="designers-grid-v6">
                 ${filtered.map(d => designerCardHTML(d)).join('')}
+            </div>` : validDesigners.length === 0 ? `<div class="empty-cta">
+                <h3>No designers yet</h3>
+                <p>Be the first to join as a designer! Create 5+ parts to unlock your designer profile.</p>
+                ${currentUser ? `<a href="#" onclick="go('become-designer'); return false;" class="btn btn-lg btn-primary">Become a Designer</a>` : `<a href="#" onclick="go('signup'); return false;" class="btn btn-lg btn-primary">Sign Up</a>`}
             </div>` : `<div class="no-designers">
                 <p>No designers match your filters.</p>
                 <button class="btn btn-outline" onclick="designerFilterSpecialty='';designerFilterLocation='';go('designers');">Clear Filters</button>
@@ -2582,8 +2714,23 @@ async function partView(id) {
     // Store for 3D viewer
     currentPartData = p;
     
+    // v7.4: Dynamic title for part pages
+    document.title = `${p.title} — ForgAuto`;
+    
     const images = p.images || [p.img] || ['https://via.placeholder.com/600x450'];
     const reviews = p.reviews || [];
+    
+    // v7.4: Sanitize all user-generated content
+    const safeTitle = sanitize(p.title);
+    const safeDescription = sanitize(p.description || 'No description provided.');
+    const safeSellerName = sanitize(p.seller_name || 'Seller');
+    const safeMake = sanitize(p.make);
+    const safeModel = sanitize(p.model);
+    const safeCategory = sanitize(p.category);
+    const safeMaterial = sanitize(p.material || 'PLA');
+    const safeInfill = sanitize(p.infill || '25%');
+    const safeFileFormat = sanitize(p.file_format || 'STL');
+    const safeFileSize = sanitize(p.file_size || 'N/A');
     
     // v7.1: Calculate actual seller rating from reviews (not hardcoded!)
     const actualRating = reviews.length > 0 
@@ -2636,7 +2783,7 @@ async function partView(id) {
             <!-- Desktop description (hidden on mobile) -->
             <div class="detail-desc detail-desc-desktop"><h2>Description</h2><p>${p.description || 'No description provided.'}</p></div>
             <div class="specs"><h2>Specifications</h2><div class="spec-row"><span>Vehicle</span><span>${p.make} ${p.model}</span></div><div class="spec-row"><span>Category</span><span>${p.category}</span></div><div class="spec-row"><span>Format</span><span>${p.file_format || 'STL'}</span></div><div class="spec-row"><span>File Size</span><span>${p.file_size || 'N/A'}</span></div><div class="spec-row"><span>Material</span><span>${p.material || 'PLA'}</span></div><div class="spec-row"><span>Infill</span><span>${p.infill || '25%'}</span></div></div>
-            ${reviews.length ? `<div class="reviews-section"><h2>Reviews (${reviews.length})</h2>${reviews.map(r => `<div class="review"><div class="review-header"><strong>${r.reviewer_name}</strong><span class="review-rating">${'★'.repeat(r.rating)} (${r.rating}/5)</span></div><p>${r.comment || ''}</p></div>`).join('')}</div>` : ''}
+            ${reviews.length ? `<div class="reviews-section"><h2>Reviews (${reviews.length})</h2>${reviews.map(r => `<div class="review"><div class="review-header"><strong>${sanitize(r.reviewer_name)}</strong><span class="review-rating">${'★'.repeat(r.rating)} (${r.rating}/5)</span></div><p>${sanitize(r.comment || '')}</p></div>`).join('')}</div>` : ''}
             ${canReview && !hasReviewed ? `<div class="write-review"><h3>Write a Review</h3><form onsubmit="handleReview(event, ${p.id})"><div class="field"><label>Rating</label><select id="reviewRating"><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Average</option><option value="2">2 - Poor</option><option value="1">1 - Terrible</option></select></div><div class="field"><label>Comment</label><textarea id="reviewComment" rows="3" placeholder="Share your experience..."></textarea></div><button type="submit" class="btn btn-primary">Submit Review</button></form></div>` : ''}
             ${canReview && hasReviewed ? `<div class="already-reviewed"><p>✓ You've already reviewed this part</p></div>` : ''}
             ${currentUser && !canReview ? `<div class="review-locked"><p>📦 Purchase this part to leave a review</p></div>` : ''}
@@ -2702,6 +2849,11 @@ async function partView(id) {
                     </button>
                 </div>
             </div>
+            ${currentUser && currentUser.id !== p.user_id ? `
+            <button class="report-btn" onclick="openReportModal('part', ${p.id})" title="Report this listing">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                Report
+            </button>` : ''}
         </div>
     </div>
     <div class="section"><div class="section-head"><h2>Similar Parts</h2></div><div class="grid">${filterPublicParts(parts).filter(x => x.id !== p.id && (x.make === p.make || x.category === p.category)).slice(0, 4).map(cardHTML).join('')}</div></div>
@@ -2873,26 +3025,12 @@ async function handleReview(e, partId) {
 }
 
 async function printShopsView(partId) {
-    // Fetch real print shops from API
+    // v7.4: Fetch real print shops from API - no more fake demo data
     let shops = [];
     try {
         shops = await api('/api/printshops');
     } catch (e) {
-        // Fall back to demo data
-        shops = printShops.map(s => ({
-            id: Math.random(),
-            shop_name: s.name,
-            address: s.address,
-            phone: s.phone,
-            email: s.email,
-            avg_rating: s.rating,
-            review_count: s.reviews,
-            turnaround: s.turnaround,
-            services: [s.instantQuote ? 'Instant Quote' : null, s.printAndShip ? 'Print & Ship' : null].filter(Boolean),
-            technologies: ['FDM'],
-            verified: s.verified,
-            isDemo: true
-        }));
+        shops = [];
     }
     
     const part = partId ? parts.find(x => x.id === partId) : null;
@@ -3389,7 +3527,7 @@ async function designerView(id) {
                             <p>${r.comment || 'Great work!'}</p>
                         </div>
                     `).join('')}
-                    ${reviewCount > 3 ? `<a href="#" class="see-all-reviews">See all ${reviewCount} reviews</a>` : ''}
+                    ${reviewCount > 3 ? `<a href="#" class="see-all-reviews" onclick="document.querySelectorAll('.reviews-mini .review-mini-card').forEach(r => r.style.display='block'); this.style.display='none'; return false;">See all ${reviewCount} reviews</a>` : ''}
                 </div>` : ''}
                 
                 <div class="profile-sidebar-card verification-card">
@@ -3756,6 +3894,17 @@ async function submitDesignerApplication(e) {
 
 // FIX 9: Show all parts with warnings when viewing own profile
 async function profileView(id) {
+    // v7.4: If no ID provided, redirect to current user's profile or dashboard
+    if (!id) {
+        if (currentUser) {
+            setTimeout(() => go('dashboard'), 0);
+            return '<div class="loading-state"><p>Redirecting to dashboard...</p></div>';
+        } else {
+            setTimeout(() => go('login'), 0);
+            return '<div class="loading-state"><p>Please login to view your profile.</p></div>';
+        }
+    }
+    
     let user, userParts = [];
     try { user = await api(`/api/users/${id}`); } catch (e) { return '<p>User not found.</p>'; }
     try { userParts = await api(`/api/parts?user=${id}`); } catch (e) { userParts = []; }
@@ -3835,13 +3984,14 @@ function cardHTML(p) {
     
     const errorFallback = "this.onerror=null; this.src='data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect fill="#333" width="400" height="300"/><text x="50%" y="50%" fill="#999" font-family="sans-serif" font-size="16" text-anchor="middle" dy=".3em">Image unavailable</text></svg>') + "'";
     
-    // Truncate title to max length
-    const displayTitle = truncateText(p.title, TITLE_MAX_LENGTH);
-    
-    // Seller info
-    const sellerName = p.seller_name || 'Seller';
+    // v7.4: Sanitize user-generated content
+    const displayTitle = sanitize(truncateText(p.title, TITLE_MAX_LENGTH));
+    const sellerName = sanitize(p.seller_name || 'Seller');
     const sellerInitial = sellerName.charAt(0).toUpperCase();
     const sellerAvatar = p.seller_avatar_url;
+    const category = sanitize(p.category || 'Part');
+    const make = sanitize(p.make || '');
+    const model = sanitize(p.model || '');
     
     // Featured border
     const isFeatured = p.featured || p.premiered;
@@ -3850,7 +4000,7 @@ function cardHTML(p) {
     return `<div class="${cardClass}" onclick="go('part', ${p.id}); return false;">
         <div class="card-image">
             <img src="${img}" alt="${displayTitle}" onerror="${errorFallback}">
-            <span class="card-badge">${p.category || 'Part'}</span>
+            <span class="card-badge">${category}</span>
             ${isFeatured ? '<span class="card-featured-badge">★ FEATURED</span>' : ''}
         </div>
         <div class="card-body">
@@ -3860,7 +4010,7 @@ function cardHTML(p) {
                 <span class="card-seller-name">${sellerName}</span>
             </div>
             <div class="card-meta">
-                <span class="card-cat">${p.make && p.make !== 'Non-Specific' ? p.make : ''}${p.model && p.model !== 'All' && p.model !== 'Any' ? ' ' + p.model : ''}</span>
+                <span class="card-cat">${make && make !== 'Non-Specific' ? make : ''}${model && model !== 'All' && model !== 'Any' ? ' ' + model : ''}</span>
                 <span class="card-price">$${(p.price || 0).toFixed(2)}</span>
             </div>
         </div>

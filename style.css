@@ -5258,3 +5258,96 @@ main.browse-fullwidth-active {
         display: none;
     }
 }
+
+/* v7.4: Hide extra reviews initially */
+.reviews-mini .review-mini-card:nth-child(n+4) {
+    display: none;
+}
+
+/* v7.4: Email verification banner */
+.verification-banner {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    color: #92400e;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+.verification-banner .btn-sm {
+    background: #f59e0b;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+/* v7.4: Sort dropdown */
+.sort-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card);
+    font-size: 13px;
+    margin-left: auto;
+}
+.browse-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* v7.4: Report button and modal */
+.report-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: all 0.2s;
+}
+.report-btn:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+.report-modal {
+    max-width: 400px;
+}
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+}
+.modal-box {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+}
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--muted);
+}
