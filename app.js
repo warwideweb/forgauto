@@ -159,7 +159,6 @@ async function api(endpoint, options = {}) {
 const categories = [
     { name: "Interior", img: "images/categories/interior.jpg" },
     { name: "Exterior", img: "images/categories/exterior.jpg" },
-    { name: "Gauges", img: "images/categories/gauges.jpg" },
     { name: "Accessories", img: "images/categories/accessories.jpg" },
     { name: "Performance", img: "images/categories/performance.jpg" },
     { name: "Lighting", img: "images/categories/lighting.jpg" }
