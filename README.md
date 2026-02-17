@@ -1,74 +1,46 @@
-# ForgAuto v7.2
+# ForgAuto v7.2.8
 
 The 3D Marketplace for Automotive Parts.
 
-**Live:** https://forgauto.com / https://warwideweb.github.io/forgauto/
+**Live:** https://forgauto.com
 
 ## Features
 
-### Users
-- **Buyer/Seller** - Buy parts, sell designs ($10 listing fee, keep 100%)
-- **Designer** - All seller features + public profile, custom commissions
-- **Print Shop** - Listed in directory, receive quote requests ($100 registration)
+### Marketplace
+- Buy/sell 3D printable car parts (STL files)
+- $10 listing fee, sellers keep 100%
+- Featured listings ($20/30 days)
+- 3D STL viewer on part pages
+
+### User Roles
+- **Buyer/Seller** - Buy parts, sell designs
+- **Designer** - Public profile, custom commissions
+- **Print Shop** - Listed in directory, receive quotes ($100 registration)
 
 ### Print Shop System
-- Full shop profile with logo, portfolio, capabilities
-- Country/State/City location support (international)
-- Technologies: FDM, SLA, SLS, MJF, Metal
-- Services: Instant Quote, Print & Ship, Local Pickup, Rush
-- Rating & review system (verified after 5 reviews)
-- Blue star badge for verified shops
-- **View Shop popup** with full details and build gallery
+- Full shop profiles with portfolio
+- Quote request system
+- "Pay Online" or "Pay at Shop" options
+- Shop reviews after completed jobs
+- PDF receipts for both parties
 
-### Quote System
-- Users request quotes from specific print shops
-- Print shops receive requests in dashboard (with product link)
-- Respond with price, turnaround, message
-- Users see quotes in "My Quotes" tab
-- **Payment options:** Buy Service + File OR Print Service Only
-- **After payment:** File upload, payment details, shop contact
-
-### Review System
-- **Reviews only after purchase** (can't review without buying)
-- **My Reviews tab** in dashboard
-- Review purchased products
-- Review print shops after completed jobs
-- Star rating with interactive input
-
-### Part Pages
-- 3D STL viewer
-- **Seller rating shown** next to name with downloads
-- Reviews section at bottom
-- Featured listings ($20/30 days)
-
-### Listing Creation
-- **Ownership confirmation checkbox** required
-- Multiple file upload for packages
-- Photo upload with drag & drop
-
-### Mobile Optimizations
-- **Title/seller info shown first** (above 3D viewer)
-- **Lazy loading images** to reduce lag
-- Responsive layouts
-
-### Other Features
-- **Message notifications** badge on username
-- Messaging system with email notifications
-- Google OAuth login
+### Mobile
+- Responsive design
+- Hamburger navigation menu
+- Mobile search on browse page
+- 2-column grid for parts
 
 ## Tech Stack
 - **Frontend:** Vanilla JS, HTML, CSS
 - **Backend:** Cloudflare Workers (D1 + R2)
-- **API:** https://forgauto-api.warwideweb.workers.dev
+- **Domain:** forgauto.com (Cloudflare DNS)
 
 ## Deployment
 
 ### Frontend (GitHub Pages)
 ```bash
 cd PartForge
-git add -A
-git commit -m "Update"
-git push origin main
+git add -A && git commit -m "Update" && git push
 ```
 
 ### Backend (Cloudflare Workers)
@@ -77,19 +49,70 @@ cd worker
 npx wrangler deploy
 ```
 
-### Database Migration
-Run migrations in Cloudflare Dashboard or:
-```bash
-npx wrangler d1 execute forgauto-db --file=migrations/003_printshop_quotes.sql
-```
-
 ## Version History
-- v7.2 - Message badge on TOP of username, wider listings, full-width browse page, pagination (25/page), Message Customer button, Pay at Shop option, PDF receipts
-- v7.1 - Fixed: seller rating from actual reviews (not hardcoded), mobile layout restructure, My Reviews with product links/prices/your rating, review API endpoint fix
-- v7.0 - Message badge, mobile-first part view, review gating, My Reviews tab, print shop popup, ownership checkbox, lazy loading
-- v6.9 - Seller ratings, ownership checkbox, enhanced quotes with payment options
-- v6.8 - Country/State fields, verified blue star, mobile fixes, backend updates
-- v6.7 - Quote system, My Quotes tab, seller avatar, print shop fixes
-- v6.6 - Remove emojis, auth bug fixes
-- v6.5 - Complete Print Shop system
-- v6.4 - Designer profile tab
+
+### v7.2.8
+- Fixed mobile logo size (2.5x bigger - 70px)
+
+### v7.2.7
+- Mobile browse search bar
+- Home "New Parts" 6 items, 2 per row
+- Print shop reviews table fix (D1 migration)
+
+### v7.2.6
+- 4 cards per row on desktop
+- Message envelope icon with count
+- Full mobile navigation (hamburger menu)
+
+### v7.2.5
+- Reduced padding on main
+- Login button shows avatar + username
+- Wider cards
+
+### v7.2.4
+- Card aspect ratio 4/3 (matches home page)
+- 3 columns default grid
+
+### v7.2.3
+- Card images 16/9 aspect ratio
+- Avatar circle for login
+- Blue message badge
+
+### v7.2.2
+- Full-width browse page
+- Message Customer button fix
+- Message badge from conversations API
+
+### v7.2.1
+- Browse page full-width CSS fix
+
+### v7.2.0
+- Message badge on username
+- Wider listings
+- Pagination (25 per page)
+- Pay at Shop option
+- PDF receipts
+
+### v7.1.0
+- Seller rating from actual reviews
+- Mobile layout restructure
+- My Reviews tab improvements
+- Review API endpoint fix
+
+### v7.0.0
+- Message notification badge
+- Mobile-first part view
+- Review gating (purchase required)
+- My Reviews dashboard tab
+- Print shop popup modal
+- Ownership checkbox on listings
+
+### v6.9.0
+- Seller ratings on part pages
+- Ownership confirmation checkbox
+- Enhanced quote payment options
+
+### v6.8.0
+- Country/State location fields
+- Verified blue star badge
+- Mobile responsive fixes

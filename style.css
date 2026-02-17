@@ -4920,7 +4920,7 @@ main.browse-fullwidth-active {
     }
     
     .logo-img {
-        height: 80px; /* 2.5x bigger on mobile */
+        height: 70px; /* 2.5x bigger on mobile */
     }
     
     /* Browse page mobile */
@@ -4987,7 +4987,7 @@ main.browse-fullwidth-active {
 
 @media (max-width: 480px) {
     .logo-img {
-        height: 28px;
+        height: 70px; /* 2.5x bigger than original ~28px */
     }
     
     #search {
