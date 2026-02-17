@@ -1,7 +1,7 @@
 // ForgAuto — 3D Marketplace for Cars
 // Version 4.0 - Major Fixes
 
-const VERSION = '6.6';
+const VERSION = '6.7';
 const API_URL = 'https://forgauto-api.warwideweb.workers.dev'; // Cloudflare Worker API
 
 // State
@@ -749,6 +749,14 @@ async function dashboardView() {
         } catch (e) { quoteRequests = []; }
     }
     
+    // Get user's sent quote requests (for regular users)
+    let myQuotes = [];
+    if (currentUser.role !== 'printshop') {
+        try {
+            myQuotes = await api('/api/quotes/sent');
+        } catch (e) { myQuotes = []; }
+    }
+    
     const roleLabels = { seller: 'Seller', designer: 'Designer', printshop: 'Print Shop' };
     
     return `<div class="dashboard">
@@ -774,6 +782,7 @@ async function dashboardView() {
                 <button class="dash-tab" onclick="showDashTab('settings')">Settings</button>
             ` : `
                 <button class="dash-tab active" onclick="showDashTab('listings')">My Listings</button>
+                <button class="dash-tab" onclick="showDashTab('myQuotes')">My Quotes ${myQuotes.filter(q => q.status === 'quoted').length > 0 ? `<span class="badge-unread">${myQuotes.filter(q => q.status === 'quoted').length}</span>` : ''}</button>
                 <button class="dash-tab" onclick="showDashTab('messages')">Messages ${unreadCount > 0 ? `<span class="badge-unread">${unreadCount}</span>` : ''}</button>
                 <button class="dash-tab" onclick="showDashTab('sales')">Sales</button>
                 <button class="dash-tab" onclick="showDashTab('purchases')">Purchases</button>
@@ -785,6 +794,53 @@ async function dashboardView() {
         <div id="dashListings" class="dash-content">
             <h2>My Listings (${myParts.length})</h2>
             ${myParts.length ? `<div class="grid">${myParts.map(p => sellerCardHTML(p)).join('')}</div>` : '<p class="empty-state">No listings yet. <a href="#" onclick="go(\'sell\'); return false;">Create your first listing</a></p>'}
+        </div>
+        
+        <div id="dashMyQuotes" class="dash-content" style="display:none">
+            <h2>My Print Quotes</h2>
+            ${myQuotes.length ? `
+                <div class="my-quotes-list">
+                    ${myQuotes.map(q => `
+                        <div class="my-quote-card ${q.status}">
+                            <div class="my-quote-header">
+                                <div class="my-quote-part">
+                                    ${q.part_image ? `<img src="${q.part_image}" alt="${q.part_title}">` : '<div class="quote-part-placeholder">3D</div>'}
+                                    <div>
+                                        <strong>${q.part_title || 'Part'}</strong>
+                                        <span>Sent to: ${q.shop_name}</span>
+                                    </div>
+                                </div>
+                                <span class="my-quote-status ${q.status}">${q.status === 'pending' ? 'Awaiting Response' : q.status === 'quoted' ? 'Quote Received' : q.status === 'declined' ? 'Declined' : q.status}</span>
+                            </div>
+                            
+                            ${q.status === 'quoted' ? `
+                                <div class="my-quote-response">
+                                    <div class="quote-price-display">
+                                        <span class="quote-label">Quoted Price:</span>
+                                        <span class="quote-price-value">$${(q.quoted_price || 0).toFixed(2)}</span>
+                                    </div>
+                                    ${q.quoted_turnaround ? `<div class="quote-turnaround">Turnaround: ${q.quoted_turnaround}</div>` : ''}
+                                    ${q.quoted_message ? `<div class="quote-message">"${q.quoted_message}"</div>` : ''}
+                                    <div class="my-quote-actions">
+                                        <button class="btn btn-primary" onclick="payForQuote(${q.id}, ${q.quoted_price})">Pay Now - $${(q.quoted_price || 0).toFixed(2)}</button>
+                                        <button class="btn btn-outline" onclick="messageShop(${q.shop_id}, '${(q.shop_name || '').replace(/'/g, "\\'")}')">Message Shop</button>
+                                    </div>
+                                </div>
+                            ` : q.status === 'pending' ? `
+                                <div class="my-quote-pending">
+                                    <p>Waiting for ${q.shop_name} to respond...</p>
+                                    <span class="quote-date">Sent: ${new Date(q.created_at).toLocaleDateString()}</span>
+                                </div>
+                            ` : q.status === 'declined' ? `
+                                <div class="my-quote-declined">
+                                    <p>This shop declined your request.</p>
+                                    <a href="#" onclick="go('printshops', ${q.part_id}); return false;" class="btn btn-outline btn-sm">Find Another Shop</a>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<p class="empty-state">No quote requests yet. Browse a part and click "Request Print Quotes" to get started.</p>'}
         </div>
         
         <div id="dashMessages" class="dash-content" style="display:none">
@@ -2145,7 +2201,7 @@ async function partView(id) {
             ${p.featured ? '<span class="detail-featured-badge">Featured</span>' : ''}
             <div class="detail-breadcrumb">${p.make} / ${p.model} / ${p.category}</div>
             <h1>${p.title}</h1>
-            <div class="detail-seller"><span class="seller-avatar">${(p.seller_name||'S').charAt(0)}</span><span>by <strong>${p.seller_name || 'Seller'}</strong></span><span class="detail-downloads">${p.downloads || 0} downloads</span></div>
+            <div class="detail-seller"><span class="seller-avatar">${p.seller_avatar_url ? `<img src="${p.seller_avatar_url}" alt="${p.seller_name}">` : (p.seller_name||'S').charAt(0)}</span><span>by <strong>${p.seller_name || 'Seller'}</strong></span><span class="detail-downloads">${p.downloads || 0} downloads</span></div>
             <div class="detail-price">$${(p.price || 0).toFixed(2)}</div>
             <div class="detail-trust"><span>Secure Payment</span><span>Instant Download</span><span>$10 Listing Fee</span></div>
             <div class="detail-actions">
@@ -2417,9 +2473,7 @@ async function printShopsView(partId) {
                 <strong>${currentPart.title}</strong>
                 <span>${currentPart.make} ${currentPart.model} · ${currentPart.file_format || 'STL'} · ${currentPart.file_size || 'N/A'}</span>
             </div>
-            <button class="btn btn-primary" onclick="openQuoteRequestModal(${currentPart.id}, '${(currentPart.title || '').replace(/'/g, "\\'")}', '${(currentPart.images?.[0] || '').replace(/'/g, "\\'")}')">
-                Request Quotes from All Shops
-            </button>
+            <span class="banner-hint">Select a print shop below to request a quote</span>
         </div>
         ` : ''}
         
@@ -2433,7 +2487,7 @@ async function printShopsView(partId) {
             <div class="no-shops-cta">
                 <h3>No print shops yet</h3>
                 <p>Are you a 3D printing service? Be the first to register!</p>
-                <a href="#" onclick="go('signup'); return false;" class="btn btn-primary">Register Your Print Shop — $100</a>
+                <a href="#" onclick="goToShopSignup(); return false;" class="btn btn-primary">Register as a Print Shop</a>
             </div>
         ` : `
             <div class="print-shops-grid">
@@ -2481,7 +2535,7 @@ async function printShopsView(partId) {
         <div class="printshop-register-cta">
             <h3>Own a 3D Printing Business?</h3>
             <p>Register your shop and start receiving quote requests from customers.</p>
-            <a href="#" onclick="go('signup'); return false;" class="btn btn-outline">Register Your Print Shop — $100</a>
+            <a href="#" onclick="goToShopSignup(); return false;" class="btn btn-outline">Register as a Print Shop</a>
         </div>
     </div>`;
 }
@@ -2502,6 +2556,46 @@ function useMyLocation() {
     } else {
         alert('Geolocation not supported. Please enter your location manually.');
     }
+}
+
+// Go to signup with print shop role pre-selected
+function goToShopSignup() {
+    if (currentUser) {
+        alert('You are already logged in. To register a print shop, please log out first or create a new account.');
+        return;
+    }
+    go('signup');
+    // Wait for page to render, then auto-select print shop
+    setTimeout(() => {
+        if (typeof selectSignupRole === 'function') {
+            selectSignupRole('printshop');
+        }
+    }, 100);
+}
+
+// Pay for a received quote
+async function payForQuote(quoteId, amount) {
+    if (!confirm(`Proceed to pay $${amount.toFixed(2)} for this print job?\n\n(Stripe payment integration coming soon - this will mark the quote as accepted)`)) {
+        return;
+    }
+    
+    try {
+        await api(`/api/quotes/${quoteId}/accept`, { method: 'POST' });
+        alert('Quote accepted! The print shop will begin your order. (Payment via Stripe coming soon)');
+        go('dashboard');
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+// Message a print shop
+function messageShop(shopId, shopName) {
+    if (!currentUser) {
+        alert('Please login to send messages');
+        go('login');
+        return;
+    }
+    go('conversation', shopId);
 }
 
 // v6.0: Full resume-style designer profile
@@ -2724,6 +2818,12 @@ function openQuoteRequestModal(partId, partTitle, partImage, shopId = null, shop
         return; 
     }
     
+    // Must select a specific shop - redirect to print shops page if none selected
+    if (!shopId) {
+        go('printshops', partId);
+        return;
+    }
+    
     const modal = document.createElement('div');
     modal.id = 'quoteRequestModal';
     modal.className = 'modal-overlay';
@@ -2733,7 +2833,7 @@ function openQuoteRequestModal(partId, partTitle, partImage, shopId = null, shop
             
             <div class="quote-request-header">
                 <h2>Request a Print Quote</h2>
-                <p>${shopId ? `From: <strong>${shopName}</strong>` : 'Send to all print shops'}</p>
+                <p>From: <strong>${shopName}</strong></p>
             </div>
             
             <div class="quote-part-preview">
@@ -2804,10 +2904,8 @@ function openQuoteRequestModal(partId, partTitle, partImage, shopId = null, shop
                 </div>
                 
                 <div class="quote-submit-section">
-                    <button type="submit" class="btn btn-lg btn-primary">
-                        ${shopId ? `Send Quote Request to ${shopName}` : 'Send to All Print Shops'}
-                    </button>
-                    <p class="quote-note">Print shops will respond with pricing via email</p>
+                    <button type="submit" class="btn btn-lg btn-primary">Send Quote Request</button>
+                    <p class="quote-note">You'll receive a response in your Quotes tab</p>
                 </div>
             </form>
         </div>
