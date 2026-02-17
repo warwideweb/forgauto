@@ -1,8 +1,10 @@
-# ForgAuto v7.4.2
+# ForgAuto v8.0
 
 The 3D Marketplace for Automotive Parts.
 
-**Live:** https://forgauto.com
+**Live:** https://forgauto.com  
+**API:** https://forgauto-api.warwideweb.workers.dev  
+**Last Updated:** 2026-02-18
 
 ## Features
 
@@ -52,6 +54,22 @@ npx wrangler deploy
 ```
 
 ## Version History
+
+### v8.0 (2026-02-18) — Stripe Integration Complete
+- ✅ Full Stripe Checkout flow (browse → buy → pay → download)
+- ✅ Purchase confirmation with download modal
+- ✅ Polling for webhook completion on return from Stripe
+- ✅ Buyers see "Download" button after purchase
+- ✅ Sellers can download own parts
+- ✅ Removed debug alerts
+- ✅ Review system works for purchasers
+- ✅ Email notifications (buyer + seller)
+
+### v7.5 (2026-02-17) — Stripe Checkout UI
+- Buy Now button with Stripe redirect
+- Stripe Connect for sellers
+- Webhook return URL handling
+- Download modal component
 
 ### v7.4.2
 - Custom category images (Interior, Exterior, Gauges, Accessories)
