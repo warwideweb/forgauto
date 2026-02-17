@@ -1,7 +1,7 @@
 // ForgAuto — 3D Marketplace for Cars
 // Version 4.0 - Major Fixes
 
-const VERSION = '7.1';
+const VERSION = '7.2';
 const API_URL = 'https://forgauto-api.warwideweb.workers.dev'; // Cloudflare Worker API
 
 // State
@@ -63,15 +63,15 @@ async function updateNavAuth() {
     const loginBtn = document.getElementById('loginBtn');
     if (currentUser && currentUser.name) {
         const unreadCount = await getUnreadMessageCount();
-        loginBtn.innerHTML = currentUser.name.split(' ')[0] + (unreadCount > 0 ? `<span class="nav-badge">${unreadCount > 9 ? '9+' : unreadCount}</span>` : '');
+        loginBtn.innerHTML = `<span class="nav-user-wrap">${unreadCount > 0 ? `<span class="nav-badge-top">${unreadCount > 9 ? '9+' : unreadCount}</span>` : ''}${currentUser.name.split(' ')[0]}</span>`;
         loginBtn.onclick = () => go('dashboard');
     } else if (currentUser && currentUser.email) {
         const unreadCount = await getUnreadMessageCount();
-        loginBtn.innerHTML = currentUser.email.split('@')[0] + (unreadCount > 0 ? `<span class="nav-badge">${unreadCount > 9 ? '9+' : unreadCount}</span>` : '');
+        loginBtn.innerHTML = `<span class="nav-user-wrap">${unreadCount > 0 ? `<span class="nav-badge-top">${unreadCount > 9 ? '9+' : unreadCount}</span>` : ''}${currentUser.email.split('@')[0]}</span>`;
         loginBtn.onclick = () => go('dashboard');
     } else if (currentUser) {
         const unreadCount = await getUnreadMessageCount();
-        loginBtn.innerHTML = 'Account' + (unreadCount > 0 ? `<span class="nav-badge">${unreadCount > 9 ? '9+' : unreadCount}</span>` : '');
+        loginBtn.innerHTML = `<span class="nav-user-wrap">${unreadCount > 0 ? `<span class="nav-badge-top">${unreadCount > 9 ? '9+' : unreadCount}</span>` : ''}Account</span>`;
         loginBtn.onclick = () => go('dashboard');
     } else {
         loginBtn.textContent = 'Login';
@@ -877,7 +877,8 @@ async function dashboardView() {
                                         <span id="quoteTotal_${q.id}" class="quote-total-value">$${(q.quoted_price || 0).toFixed(2)}</span>
                                     </div>
                                     <div class="my-quote-actions">
-                                        <button class="btn btn-primary" onclick="payForQuoteWithOptions(${q.id}, ${q.quoted_price}, ${q.part_price || 0}, ${q.part_id || 'null'})">Pay Now</button>
+                                        <button class="btn btn-primary" onclick="payForQuoteWithOptions(${q.id}, ${q.quoted_price}, ${q.part_price || 0}, ${q.part_id || 'null'})">Pay Online</button>
+                                        <button class="btn btn-outline" onclick="selectPayAtShop(${q.id})">Pay at Shop</button>
                                         <button class="btn btn-outline" onclick="messageShop(${q.shop_id}, '${(q.shop_name || '').replace(/'/g, "\\'")}')">Message Shop</button>
                                     </div>
                                 </div>
@@ -1037,8 +1038,15 @@ async function dashboardView() {
                                     <button class="btn btn-outline btn-sm" onclick="declineQuote(${q.id})">Decline</button>
                                 ` : q.status === 'quoted' ? `
                                     <span class="quote-sent-price">Quoted: $${q.quoted_price?.toFixed(2) || '0.00'}</span>
+                                ` : q.status === 'accepted' ? `
+                                    <button class="btn btn-primary btn-sm" onclick="openMarkPaidModal(${q.id}, ${q.quoted_price || 0}, '${(q.customer_name || '').replace(/'/g, "\\'")}')">Mark as Paid at Shop</button>
+                                    <button class="btn btn-outline btn-sm" onclick="downloadQuoteReceipt(${q.id})">Download Receipt</button>
+                                ` : q.status === 'paid' ? `
+                                    <span class="quote-paid-badge">✓ Paid $${(q.total_paid || q.quoted_price || 0).toFixed(2)}</span>
+                                    <button class="btn btn-outline btn-sm" onclick="downloadQuoteReceipt(${q.id})">Download Receipt</button>
                                 ` : ''}
-                                <a href="mailto:${q.customer_email}" class="btn btn-outline btn-sm">Email Customer</a>
+                                <button class="btn btn-outline btn-sm" onclick="go('conversation', ${q.customer_id})">Message Customer</button>
+                                <a href="mailto:${q.customer_email}" class="btn btn-outline btn-sm">Email</a>
                             </div>
                             <div class="quote-date">Received: ${new Date(q.created_at).toLocaleDateString()}</div>
                         </div>
@@ -1837,6 +1845,10 @@ function homeView() {
     `;
 }
 
+// Pagination state
+let currentPage = 1;
+const ITEMS_PER_PAGE = 25;
+
 function browseView() {
     // Start with only parts that have valid images
     let filtered = filterPublicParts(parts);
@@ -1851,30 +1863,49 @@ function browseView() {
     const regularParts = filtered.filter(p => !p.featured && !p.premiered);
     const sortedParts = [...featuredParts, ...regularParts];
     
-    return `<div class="browse">
+    // v7.2: Pagination (max 25 per page)
+    const totalPages = Math.ceil(sortedParts.length / ITEMS_PER_PAGE);
+    if (currentPage > totalPages) currentPage = 1;
+    const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedParts = sortedParts.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+    
+    return `<div class="browse browse-fullwidth">
         <aside class="sidebar">
             <h3>Category</h3>
-            <select class="filter-select" onchange="filterCat=this.value;go('browse');">
+            <select class="filter-select" onchange="filterCat=this.value;currentPage=1;go('browse');">
                 <option value="">All Categories</option>
                 ${categories.map(c => `<option value="${c.name}" ${filterCat===c.name?'selected':''}>${c.name}</option>`).join('')}
             </select>
             <h3>Make</h3>
-            <select class="filter-select" onchange="filterMake=this.value;filterModel='';go('browse');">
+            <select class="filter-select" onchange="filterMake=this.value;filterModel='';currentPage=1;go('browse');">
                 <option value="">All Makes</option>
                 ${carMakes.filter(m => m !== 'Non-Specific').map(m => `<option value="${m}" ${filterMake===m?'selected':''}>${m}</option>`).join('')}
             </select>
             ${filterMake && carModels[filterMake] ? `<h3>Model</h3>
-            <select class="filter-select" onchange="filterModel=this.value;go('browse');">
+            <select class="filter-select" onchange="filterModel=this.value;currentPage=1;go('browse');">
                 <option value="">All ${filterMake} Models</option>
                 ${carModels[filterMake].map(m => `<option value="${m}" ${filterModel===m?'selected':''}>${m}</option>`).join('')}
             </select>` : ''}
             <div class="sidebar-cta"><p>Don't have a printer?</p><a href="#" onclick="go('printshops'); return false;" class="btn btn-outline" style="width:100%">Find Print Shop</a></div>
         </aside>
-        <div><div class="browse-head"><h1>${title}</h1><span style="color:var(--muted)">${sortedParts.length} parts</span></div>
-            ${featuredParts.length > 0 ? `<div class="browse-featured-label"><span>★</span> Featured Listings</div>` : ''}
-            <div class="grid">${sortedParts.length ? sortedParts.map(cardHTML).join('') : '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:48px 0;">No parts found.</p>'}</div>
+        <div class="browse-main"><div class="browse-head"><h1>${title}</h1><span style="color:var(--muted)">${sortedParts.length} parts</span></div>
+            ${featuredParts.length > 0 && currentPage === 1 ? `<div class="browse-featured-label"><span>★</span> Featured Listings</div>` : ''}
+            <div class="grid grid-wide">${paginatedParts.length ? paginatedParts.map(cardHTML).join('') : '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:48px 0;">No parts found.</p>'}</div>
+            ${totalPages > 1 ? `
+            <div class="pagination">
+                <button class="btn btn-sm ${currentPage === 1 ? 'btn-disabled' : 'btn-outline'}" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>
+                <span class="page-info">Page ${currentPage} of ${totalPages}</span>
+                <button class="btn btn-sm ${currentPage === totalPages ? 'btn-disabled' : 'btn-outline'}" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>
+            </div>
+            ` : ''}
         </div>
     </div>`;
+}
+
+function goToPage(page) {
+    currentPage = page;
+    go('browse');
+    window.scrollTo(0, 0);
 }
 
 // v6.0: Designer specialties for filtering
@@ -2994,6 +3025,139 @@ async function handleQuoteFileUpload(e, quoteId) {
     } catch (err) {
         if (fileNameEl) fileNameEl.textContent = 'Upload failed - click to try again';
         alert('Error uploading file: ' + err.message);
+    }
+}
+
+// Customer selects "Pay at Shop" option
+async function selectPayAtShop(quoteId) {
+    if (!confirm('You\'ve chosen to pay at the shop in person.\n\nThe print shop will be notified and will mark your order as paid when you visit.\n\nContinue?')) {
+        return;
+    }
+    
+    try {
+        await api(`/api/quotes/${quoteId}/pay-at-shop`, { method: 'POST' });
+        alert('The print shop has been notified that you will pay in person. They will contact you with details.');
+        go('dashboard');
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+// Print shop marks quote as paid at shop
+function openMarkPaidModal(quoteId, quotedPrice, customerName) {
+    const modal = document.createElement('div');
+    modal.id = 'markPaidModal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeMarkPaidModal()">×</button>
+            <h2>Mark as Paid at Shop</h2>
+            <p>Customer: <strong>${customerName}</strong></p>
+            <form onsubmit="submitMarkPaid(event, ${quoteId})">
+                <div class="field">
+                    <label>Amount Received ($)</label>
+                    <input type="number" id="paidAmount" step="0.01" min="0" value="${quotedPrice.toFixed(2)}" required>
+                </div>
+                <div class="field">
+                    <label>Payment Method</label>
+                    <select id="paymentMethod">
+                        <option value="cash">Cash</option>
+                        <option value="card">Card at Shop</option>
+                        <option value="transfer">Bank Transfer</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Notes (optional)</label>
+                    <textarea id="paymentNotes" rows="2" placeholder="Any notes about the payment..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%">Confirm Payment Received</button>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function closeMarkPaidModal() {
+    const modal = document.getElementById('markPaidModal');
+    if (modal) modal.remove();
+}
+
+async function submitMarkPaid(e, quoteId) {
+    e.preventDefault();
+    const amount = parseFloat(document.getElementById('paidAmount').value);
+    const method = document.getElementById('paymentMethod').value;
+    const notes = document.getElementById('paymentNotes').value;
+    
+    try {
+        await api(`/api/quotes/${quoteId}/mark-paid`, {
+            method: 'POST',
+            body: JSON.stringify({ amount, method, notes })
+        });
+        closeMarkPaidModal();
+        alert('Payment recorded! Both you and the customer will receive a receipt.');
+        go('dashboard');
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+// Download quote receipt as PDF
+async function downloadQuoteReceipt(quoteId) {
+    try {
+        // Fetch quote details
+        const quote = await api(`/api/quotes/${quoteId}`);
+        
+        // Generate PDF receipt
+        const receiptHTML = `
+            <html>
+            <head>
+                <title>ForgAuto Receipt #${quoteId}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+                    .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 20px; }
+                    .header h1 { margin: 0; font-size: 24px; }
+                    .header p { margin: 5px 0; color: #666; }
+                    .details { margin: 20px 0; }
+                    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+                    .row strong { font-weight: 600; }
+                    .total { font-size: 20px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #000; }
+                    .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>ForgAuto</h1>
+                    <p>3D Print Service Receipt</p>
+                    <p>Receipt #${quoteId}</p>
+                </div>
+                <div class="details">
+                    <div class="row"><span>Date:</span><strong>${new Date(quote.paid_at || quote.updated_at).toLocaleDateString()}</strong></div>
+                    <div class="row"><span>Customer:</span><strong>${quote.customer_name}</strong></div>
+                    <div class="row"><span>Print Shop:</span><strong>${quote.shop_name}</strong></div>
+                    <div class="row"><span>Part:</span><strong>${quote.part_title || 'Custom Print'}</strong></div>
+                    <div class="row"><span>Material:</span><strong>${quote.material || 'Standard'}</strong></div>
+                    <div class="row"><span>Quantity:</span><strong>${quote.quantity || 1}</strong></div>
+                    ${quote.payment_method ? `<div class="row"><span>Payment Method:</span><strong>${quote.payment_method}</strong></div>` : ''}
+                </div>
+                <div class="total">
+                    <div class="row"><span>Total Paid:</span><strong>$${(quote.total_paid || quote.quoted_price || 0).toFixed(2)}</strong></div>
+                </div>
+                <div class="footer">
+                    <p>Thank you for using ForgAuto!</p>
+                    <p>https://forgauto.com</p>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        // Open in new window for printing/saving
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(receiptHTML);
+        printWindow.document.close();
+        printWindow.print();
+    } catch (err) {
+        alert('Error generating receipt: ' + err.message);
     }
 }
 

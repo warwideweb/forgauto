@@ -4646,3 +4646,121 @@ body.dark .download-email-notice {
         justify-content: flex-start;
     }
 }
+
+/* v7.2: Badge on top, wider listings, pagination, pay at shop */
+
+/* Nav badge on TOP of username */
+.nav-user-wrap {
+    position: relative;
+    display: inline-block;
+}
+
+.nav-badge-top {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ef4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Full-width browse page */
+.browse-fullwidth {
+    max-width: 100%;
+    padding: 0 24px;
+}
+
+.browse-main {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Wider grid for listings */
+.grid-wide {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+@media (min-width: 1400px) {
+    .grid-wide {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+@media (min-width: 1800px) {
+    .grid-wide {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin: 32px 0;
+    padding: 16px;
+}
+
+.page-info {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.btn-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Quote paid badge in shop dashboard */
+.quote-paid-badge {
+    background: #dcfce7;
+    color: #16a34a;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+/* Pay at Shop styling */
+.pay-at-shop-info {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 12px 0;
+}
+
+.pay-at-shop-info p {
+    margin: 0;
+    color: #92400e;
+    font-size: 14px;
+}
+
+/* Mobile nav badge adjustment */
+@media (max-width: 768px) {
+    .nav-badge-top {
+        top: -8px;
+        font-size: 9px;
+        min-width: 16px;
+        height: 16px;
+    }
+    
+    .grid-wide {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+    }
+}
