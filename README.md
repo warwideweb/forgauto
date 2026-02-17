@@ -1,4 +1,4 @@
-# ForgAuto v8.0
+# ForgAuto v8.1
 
 The 3D Marketplace for Automotive Parts.
 
@@ -54,6 +54,14 @@ npx wrangler deploy
 ```
 
 ## Version History
+
+### v8.1 (2026-02-18) — Listing Fees & Payout Fallback
+- ✅ Listing fee payment required ($5) before going live
+- ✅ Admins post for free
+- ✅ If seller hasn't completed Stripe Connect, payments go to ForgAuto platform
+- ✅ Seller capability check before attempting transfers
+- ✅ Updated Terms of Service with payout policy
+- ✅ Download modal "Leave Review" button fixed
 
 ### v8.0 (2026-02-18) — Stripe Integration Complete
 - ✅ Full Stripe Checkout flow (browse → buy → pay → download)
