@@ -20,6 +20,11 @@ let currentUser = null;
 let authToken = localStorage.getItem('authToken');
 let isAuthChecking = true; // Prevents flash while checking auth
 
+// v7.4: Admin helper
+function isAdmin() {
+    return currentUser && currentUser.role === 'admin';
+}
+
 // Mobile menu toggle
 function toggleMobileMenu() {
     const menu = document.getElementById('mobileMenu');
@@ -89,12 +94,14 @@ async function updateNavAuth() {
         const initial = name.charAt(0).toUpperCase();
         
         loginBtn.className = 'nav-user-btn';
+        // v7.4: Show admin badge
+        const adminBadge = isAdmin() ? '<span class="nav-admin-badge">ADMIN</span>' : '';
         loginBtn.innerHTML = `<span class="nav-user-wrap">
             <span class="nav-avatar-container">
                 <span class="nav-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="${name}">` : initial}</span>
                 ${unreadCount > 0 ? `<span class="nav-msg-icon" title="${unreadCount} new messages"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg><span class="msg-count">${unreadCount > 9 ? '9+' : unreadCount}</span></span>` : ''}
             </span>
-            <span class="nav-username">${name}</span>
+            <span class="nav-username">${name}${adminBadge}</span>
         </span>`;
         loginBtn.onclick = () => go('dashboard');
         // Update mobile menu too
@@ -995,6 +1002,7 @@ async function dashboardView() {
                 </div>
             </div>
             <div class="dashboard-actions">
+                ${isAdmin() ? `<a href="admin.html" class="btn btn-admin">🛡️ Admin Panel</a>` : ''}
                 ${currentUser.role !== 'printshop' ? `<a href="#sell" onclick="go('sell'); return false;" class="btn btn-primary">+ New Listing</a>` : ''}
                 <button onclick="handleLogout()" class="btn btn-outline">Logout</button>
             </div>
@@ -2258,10 +2266,15 @@ function sellView() {
         return `<div class="auth-prompt"><h2>Login Required</h2><p>You need to be logged in to sell parts.</p><a href="#" onclick="go('login'); return false;" class="btn btn-primary">Login</a> <a href="#" onclick="go('signup'); return false;" class="btn btn-outline">Sign Up</a></div>`;
     }
     
+    // v7.4: Admins post for free
+    const listingFee = isAdmin() ? 0 : 10;
+    const feeDisplay = isAdmin() ? 'FREE' : '$10';
+    
     return `<div class="sell-layout">
         <div class="sell-info"><h1>Sell your car parts</h1><p>Upload your designs, set your price, start earning.</p>
-            <div class="steps"><div class="step"><div class="step-num">1</div><div><h4>Upload files</h4><p>3D files + photos</p></div></div><div class="step"><div class="step-num">2</div><div><h4>Pay listing fee</h4><p>One-time $10</p></div></div><div class="step"><div class="step-num">3</div><div><h4>Get paid</h4><p>Keep 100%</p></div></div></div>
-            <div class="pricing"><div class="pricing-big">$10</div><div class="pricing-sub">one-time listing fee</div><ul><li>Keep 100% of sales</li><li>No monthly fees</li><li>No commission</li><li>Listing never expires</li></ul></div>
+            ${isAdmin() ? '<div class="admin-free-badge">🛡️ Admin Account — Free Listings</div>' : ''}
+            <div class="steps"><div class="step"><div class="step-num">1</div><div><h4>Upload files</h4><p>3D files + photos</p></div></div><div class="step"><div class="step-num">2</div><div><h4>Pay listing fee</h4><p>${isAdmin() ? 'FREE for admins' : 'One-time $10'}</p></div></div><div class="step"><div class="step-num">3</div><div><h4>Get paid</h4><p>Keep 100%</p></div></div></div>
+            <div class="pricing"><div class="pricing-big">${feeDisplay}</div><div class="pricing-sub">${isAdmin() ? 'admin account' : 'one-time listing fee'}</div><ul><li>Keep 100% of sales</li><li>No monthly fees</li><li>No commission</li><li>Listing never expires</li></ul></div>
         </div>
         <div class="form"><h2>Create Listing</h2>
             <form onsubmit="handleCreateListing(event)">
@@ -2295,7 +2308,7 @@ function sellView() {
                     <span>I confirm that I have full ownership of this design and it is exclusively mine to sell. I have the right to distribute this file and it does not infringe on any copyrights or trademarks.</span>
                 </label>
             </div>
-            <div class="form-total"><span>Total</span><span id="totalPrice">$10.00</span></div>
+            <div class="form-total"><span>Total</span><span id="totalPrice">${isAdmin() ? '$0.00' : '$10.00'}</span></div>
             <button type="submit" class="btn btn-lg btn-primary" style="width:100%">Create Listing</button>
             </form>
         </div>
@@ -2538,7 +2551,12 @@ async function handleCreateListing(e) {
     }
 }
 
-function updateTotal() { document.getElementById('totalPrice').textContent = document.getElementById('featuredCheckbox')?.checked ? '$30.00' : '$10.00'; }
+function updateTotal() { 
+    const baseFee = isAdmin() ? 0 : 10;
+    const featuredFee = document.getElementById('featuredCheckbox')?.checked ? 20 : 0;
+    const total = baseFee + featuredFee;
+    document.getElementById('totalPrice').textContent = total === 0 ? '$0.00' : '$' + total.toFixed(2);
+}
 
 // FIX 7: Image editing support
 let editImagesToRemove = [];
@@ -2818,10 +2836,11 @@ async function partView(id) {
                     `).join('')}
                 </div>
             </div>` : ''}
-            ${currentUser && currentUser.id === p.user_id ? `
+            ${currentUser && (currentUser.id === p.user_id || isAdmin()) ? `
             <div class="owner-actions">
                 <button class="btn btn-outline" onclick="go('edit', ${p.id})">Edit Listing</button>
                 <button class="btn btn-outline btn-danger" onclick="handleDeletePart(${p.id})">Delete</button>
+                ${isAdmin() && currentUser.id !== p.user_id ? '<span class="admin-action-badge">Admin Action</span>' : ''}
             </div>` : ''}
             ${currentUser && currentUser.id === p.user_id && !p.premiered ? `
             <div class="boost-cta">
