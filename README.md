@@ -1,4 +1,4 @@
-# ForgAuto v6.8
+# ForgAuto v7.0
 
 The 3D Marketplace for Automotive Parts.
 
@@ -18,20 +18,43 @@ The 3D Marketplace for Automotive Parts.
 - Services: Instant Quote, Print & Ship, Local Pickup, Rush
 - Rating & review system (verified after 5 reviews)
 - Blue star badge for verified shops
+- **View Shop popup** with full details and build gallery
 
 ### Quote System
 - Users request quotes from specific print shops
-- Print shops receive requests in dashboard
+- Print shops receive requests in dashboard (with product link)
 - Respond with price, turnaround, message
 - Users see quotes in "My Quotes" tab
-- Pay Now / Message buttons
+- **Payment options:** Buy Service + File OR Print Service Only
+- **After payment:** File upload, payment details, shop contact
+
+### Review System
+- **Reviews only after purchase** (can't review without buying)
+- **My Reviews tab** in dashboard
+- Review purchased products
+- Review print shops after completed jobs
+- Star rating with interactive input
+
+### Part Pages
+- 3D STL viewer
+- **Seller rating shown** next to name with downloads
+- Reviews section at bottom
+- Featured listings ($20/30 days)
+
+### Listing Creation
+- **Ownership confirmation checkbox** required
+- Multiple file upload for packages
+- Photo upload with drag & drop
+
+### Mobile Optimizations
+- **Title/seller info shown first** (above 3D viewer)
+- **Lazy loading images** to reduce lag
+- Responsive layouts
 
 ### Other Features
-- 3D STL viewer on part pages
-- Featured listings ($20/30 days)
+- **Message notifications** badge on username
 - Messaging system with email notifications
 - Google OAuth login
-- Mobile responsive
 
 ## Tech Stack
 - **Frontend:** Vanilla JS, HTML, CSS
@@ -61,6 +84,8 @@ npx wrangler d1 execute forgauto-db --file=migrations/003_printshop_quotes.sql
 ```
 
 ## Version History
+- v7.0 - Message badge, mobile-first part view, review gating, My Reviews tab, print shop popup, ownership checkbox, lazy loading
+- v6.9 - Seller ratings, ownership checkbox, enhanced quotes with payment options
 - v6.8 - Country/State fields, verified blue star, mobile fixes, backend updates
 - v6.7 - Quote system, My Quotes tab, seller avatar, print shop fixes
 - v6.6 - Remove emojis, auth bug fixes

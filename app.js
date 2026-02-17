@@ -1,7 +1,7 @@
 // ForgAuto — 3D Marketplace for Cars
 // Version 4.0 - Major Fixes
 
-const VERSION = '6.9';
+const VERSION = '7.0';
 const API_URL = 'https://forgauto-api.warwideweb.workers.dev'; // Cloudflare Worker API
 
 // State
@@ -59,22 +59,41 @@ function loginWithGoogle() {
     window.location.href = `${API_URL}/api/auth/google`;
 }
 
-function updateNavAuth() {
+async function updateNavAuth() {
     const loginBtn = document.getElementById('loginBtn');
     if (currentUser && currentUser.name) {
-        loginBtn.textContent = currentUser.name.split(' ')[0];
+        const unreadCount = await getUnreadMessageCount();
+        loginBtn.innerHTML = currentUser.name.split(' ')[0] + (unreadCount > 0 ? `<span class="nav-badge">${unreadCount > 9 ? '9+' : unreadCount}</span>` : '');
         loginBtn.onclick = () => go('dashboard');
     } else if (currentUser && currentUser.email) {
-        loginBtn.textContent = currentUser.email.split('@')[0];
+        const unreadCount = await getUnreadMessageCount();
+        loginBtn.innerHTML = currentUser.email.split('@')[0] + (unreadCount > 0 ? `<span class="nav-badge">${unreadCount > 9 ? '9+' : unreadCount}</span>` : '');
         loginBtn.onclick = () => go('dashboard');
     } else if (currentUser) {
-        loginBtn.textContent = 'Account';
+        const unreadCount = await getUnreadMessageCount();
+        loginBtn.innerHTML = 'Account' + (unreadCount > 0 ? `<span class="nav-badge">${unreadCount > 9 ? '9+' : unreadCount}</span>` : '');
         loginBtn.onclick = () => go('dashboard');
     } else {
         loginBtn.textContent = 'Login';
         loginBtn.onclick = () => go('login');
     }
 }
+
+// Get unread message count for nav badge
+async function getUnreadMessageCount() {
+    if (!authToken) return 0;
+    try {
+        const data = await api('/api/messages/unread-count');
+        return data.count || 0;
+    } catch (e) {
+        return 0;
+    }
+}
+
+// Refresh nav badge periodically
+setInterval(() => {
+    if (currentUser) updateNavAuth();
+}, 30000); // Every 30 seconds
 
 // API helpers
 async function api(endpoint, options = {}) {
@@ -798,6 +817,7 @@ async function dashboardView() {
                 <button class="dash-tab" onclick="showDashTab('messages')">Messages ${unreadCount > 0 ? `<span class="badge-unread">${unreadCount}</span>` : ''}</button>
                 <button class="dash-tab" onclick="showDashTab('sales')">Sales</button>
                 <button class="dash-tab" onclick="showDashTab('purchases')">Purchases</button>
+                <button class="dash-tab" onclick="showDashTab('reviews')">My Reviews</button>
                 ${currentUser.role === 'designer' ? `<button class="dash-tab" onclick="showDashTab('designer')">Designer Profile</button>` : ''}
                 <button class="dash-tab" onclick="showDashTab('settings')">Settings</button>
             `}
@@ -934,6 +954,55 @@ async function dashboardView() {
         <div id="dashPurchases" class="dash-content" style="display:none">
             <h2>My Purchases</h2>
             ${myPurchases.length ? `<div class="purchase-list">${myPurchases.map(p => `<div class="purchase-item"><strong>${p.title}</strong> by ${p.seller_name}<span class="purchase-price">$${p.price.toFixed(2)}</span><a href="#" onclick="go('part', ${p.part_id}); return false;" class="btn btn-sm">View</a></div>`).join('')}</div>` : '<p class="empty-state">No purchases yet.</p>'}
+        </div>
+        
+        <div id="dashReviews" class="dash-content" style="display:none">
+            <h2>My Reviews</h2>
+            <p class="section-subtitle">Review products you've purchased and print shops you've used</p>
+            
+            <h3>Product Reviews</h3>
+            ${myPurchases.length ? `
+                <div class="review-items-list">
+                    ${myPurchases.map(p => `
+                        <div class="review-item-card">
+                            <div class="review-item-info">
+                                <strong>${p.title}</strong>
+                                <span>by ${p.seller_name}</span>
+                            </div>
+                            ${p.reviewed ? `
+                                <div class="review-status reviewed">
+                                    <span class="review-stars">${'★'.repeat(p.review_rating || 5)}</span>
+                                    <span>Reviewed</span>
+                                </div>
+                            ` : `
+                                <button class="btn btn-sm btn-primary" onclick="openReviewModal('part', ${p.part_id}, '${(p.title || '').replace(/'/g, "\\'")}')">Write Review</button>
+                            `}
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<p class="empty-state">No purchases to review yet.</p>'}
+            
+            <h3 style="margin-top:24px;">Print Shop Reviews</h3>
+            ${myQuotes.filter(q => q.status === 'accepted' || q.status === 'paid').length ? `
+                <div class="review-items-list">
+                    ${myQuotes.filter(q => q.status === 'accepted' || q.status === 'paid').map(q => `
+                        <div class="review-item-card">
+                            <div class="review-item-info">
+                                <strong>${q.shop_name}</strong>
+                                <span>Print job for: ${q.part_title || 'Custom part'}</span>
+                            </div>
+                            ${q.shop_reviewed ? `
+                                <div class="review-status reviewed">
+                                    <span class="review-stars">${'★'.repeat(q.shop_review_rating || 5)}</span>
+                                    <span>Reviewed</span>
+                                </div>
+                            ` : `
+                                <button class="btn btn-sm btn-primary" onclick="openReviewModal('shop', ${q.shop_id}, '${(q.shop_name || '').replace(/'/g, "\\'")}')">Write Review</button>
+                            `}
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<p class="empty-state">No completed print jobs to review yet.</p>'}
         </div>
         
         ${currentUser.role === 'printshop' ? `
@@ -1558,6 +1627,145 @@ async function declineQuote(quoteId) {
     } catch (err) {
         alert('Error: ' + err.message);
     }
+}
+
+// Review modal for parts and print shops
+function openReviewModal(type, id, name) {
+    const modal = document.createElement('div');
+    modal.id = 'reviewModal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeReviewModal()">×</button>
+            <h2>Review ${type === 'shop' ? 'Print Shop' : 'Product'}</h2>
+            <p class="review-modal-name">${name}</p>
+            <form onsubmit="submitReviewFromModal(event, '${type}', ${id})">
+                <div class="field">
+                    <label>Rating</label>
+                    <div class="star-rating-input" id="starRatingInput">
+                        ${[1,2,3,4,5].map(n => `<span class="star-input" data-rating="${n}" onclick="setStarRating(${n})">☆</span>`).join('')}
+                    </div>
+                    <input type="hidden" id="modalRating" value="5">
+                </div>
+                <div class="field">
+                    <label>Your Review</label>
+                    <textarea id="modalReviewComment" rows="4" placeholder="Share your experience..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%">Submit Review</button>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setStarRating(5); // Default to 5 stars
+}
+
+function closeReviewModal() {
+    const modal = document.getElementById('reviewModal');
+    if (modal) modal.remove();
+}
+
+function setStarRating(rating) {
+    document.getElementById('modalRating').value = rating;
+    document.querySelectorAll('#starRatingInput .star-input').forEach((star, i) => {
+        star.textContent = i < rating ? '★' : '☆';
+        star.classList.toggle('active', i < rating);
+    });
+}
+
+async function submitReviewFromModal(e, type, id) {
+    e.preventDefault();
+    const rating = parseInt(document.getElementById('modalRating').value);
+    const comment = document.getElementById('modalReviewComment').value;
+    
+    try {
+        const endpoint = type === 'shop' ? `/api/printshops/${id}/review` : `/api/parts/${id}/review`;
+        await api(endpoint, {
+            method: 'POST',
+            body: JSON.stringify({ rating, comment })
+        });
+        closeReviewModal();
+        alert('Review submitted! Thank you.');
+        go('dashboard');
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+// View Shop popup modal
+function openShopModal(shopId) {
+    // Fetch shop details and show in popup
+    showShopPopup(shopId);
+}
+
+async function showShopPopup(shopId) {
+    let shop = null;
+    try {
+        shop = await api(`/api/printshops/${shopId}`);
+    } catch (e) {
+        alert('Could not load shop details');
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.id = 'shopModal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box shop-modal-box">
+            <button class="modal-close" onclick="closeShopModal()">×</button>
+            <div class="shop-modal-header">
+                ${shop.logo_url ? `<img src="${shop.logo_url}" alt="${shop.shop_name}" class="shop-modal-logo">` : `<div class="shop-modal-logo-placeholder">PS</div>`}
+                <div class="shop-modal-info">
+                    <h2>${shop.shop_name} ${shop.verified ? '<span class="verified-star">★</span>' : ''}</h2>
+                    <div class="shop-modal-rating">
+                        ${'★'.repeat(Math.floor(shop.avg_rating || 0))}${'☆'.repeat(5 - Math.floor(shop.avg_rating || 0))}
+                        <span>${(shop.avg_rating || 0).toFixed(1)} (${shop.review_count || 0} reviews)</span>
+                    </div>
+                    <p class="shop-modal-location">📍 ${shop.city || ''}${shop.state ? ` (${shop.state})` : ''}${shop.country ? `, ${shop.country}` : ''}</p>
+                </div>
+            </div>
+            
+            <div class="shop-modal-details">
+                ${shop.bio ? `<div class="shop-modal-section"><h3>About</h3><p>${shop.bio}</p></div>` : ''}
+                
+                <div class="shop-modal-section">
+                    <h3>Services & Equipment</h3>
+                    <div class="shop-modal-tags">
+                        ${(shop.technologies || []).map(t => `<span class="tag tech-tag">${t}</span>`).join('')}
+                        ${(shop.services || []).map(s => `<span class="tag service-tag">${s}</span>`).join('')}
+                    </div>
+                </div>
+                
+                ${shop.build_size ? `<div class="shop-modal-spec"><strong>Max Build Size:</strong> ${shop.build_size}</div>` : ''}
+                ${shop.turnaround ? `<div class="shop-modal-spec"><strong>Typical Turnaround:</strong> ${shop.turnaround}</div>` : ''}
+                
+                ${shop.portfolio_images && shop.portfolio_images.length ? `
+                <div class="shop-modal-section">
+                    <h3>Build Gallery</h3>
+                    <div class="shop-modal-gallery">
+                        ${shop.portfolio_images.map(img => `<img src="${img}" alt="Build" loading="lazy" onclick="openLightbox('${img}')">`).join('')}
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+            
+            <div class="shop-modal-contact">
+                ${shop.phone ? `<a href="tel:${shop.phone}" class="btn btn-outline">📞 Call</a>` : ''}
+                ${shop.email ? `<a href="mailto:${shop.email}" class="btn btn-outline">✉️ Email</a>` : ''}
+                <button class="btn btn-primary" onclick="closeShopModal(); openQuoteRequestModalForShop(${shop.id}, '${(shop.shop_name || '').replace(/'/g, "\\'")}')">Request Quote</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function closeShopModal() {
+    const modal = document.getElementById('shopModal');
+    if (modal) modal.remove();
+}
+
+function openQuoteRequestModalForShop(shopId, shopName) {
+    // Open a generic quote request for a shop (without specific part)
+    alert(`Request a quote from ${shopName}. Select a part first or describe your custom print needs.`);
 }
 
 // ========== HOME VIEW ==========
@@ -2264,21 +2472,35 @@ async function partView(id) {
     // FIX 13: Show 3D viewer + images together like Thingiverse
     const hasFile = !!p.file_url;
     
-    // v5.2: Restructured layout - Description under gallery (left), purchase info (right)
+    // v6.10: Mobile-first layout with title at top
+    const canReview = p.purchased || (currentUser && currentUser.id === p.user_id);
+    const hasReviewed = p.user_reviewed || false;
+    
     return `<div class="detail">
+        <!-- Mobile header: Title, seller, rating shown first on mobile -->
+        <div class="detail-mobile-header">
+            ${p.featured ? '<span class="detail-featured-badge">Featured</span>' : ''}
+            <div class="detail-breadcrumb">${p.make} / ${p.model} / ${p.category}</div>
+            <h1>${p.title}</h1>
+            <div class="detail-seller"><span class="seller-avatar">${p.seller_avatar_url ? `<img src="${p.seller_avatar_url}" alt="${p.seller_name}">` : (p.seller_name||'S').charAt(0)}</span><span>by <strong>${p.seller_name || 'Seller'}</strong> <span class="seller-rating">${'★'.repeat(Math.floor(p.seller_rating || 5))}${(p.seller_rating || 5) % 1 >= 0.5 ? '½' : ''} (${(p.seller_rating || 5).toFixed(1)})</span></span><span class="detail-downloads">${p.downloads || 0} downloads</span></div>
+            <div class="detail-price">$${(p.price || 0).toFixed(2)}</div>
+        </div>
+        
         <div class="detail-left">
             <div class="detail-gallery">
                 <div class="viewer-container" id="viewer3d"></div>
                 <div class="gallery-thumbs">
                     ${hasFile ? `<button class="thumb-3d active" onclick="show3DViewer(0)" data-file-index="0">3D${p.file_urls && p.file_urls.length > 1 ? ' 1' : ''}</button>` : ''}
                     ${p.file_urls && p.file_urls.length > 1 ? p.file_urls.slice(1).map((f, i) => `<button class="thumb-3d" onclick="show3DViewer(${i+1})" data-file-index="${i+1}">3D ${i+2}</button>`).join('') : ''}
-                    ${images.map((img, i) => `<img src="${img}" alt="${p.title}" class="thumb" onclick="showGalleryImage('${img}', this)">`).join('')}
+                    ${images.map((img, i) => `<img src="${img}" alt="${p.title}" class="thumb" loading="lazy" onclick="showGalleryImage('${img}', this)">`).join('')}
                 </div>
             </div>
             <div class="detail-desc"><h2>Description</h2><p>${p.description || 'No description provided.'}</p></div>
             <div class="specs"><h2>Specifications</h2><div class="spec-row"><span>Vehicle</span><span>${p.make} ${p.model}</span></div><div class="spec-row"><span>Category</span><span>${p.category}</span></div><div class="spec-row"><span>Format</span><span>${p.file_format || 'STL'}</span></div><div class="spec-row"><span>File Size</span><span>${p.file_size || 'N/A'}</span></div><div class="spec-row"><span>Material</span><span>${p.material || 'PLA'}</span></div><div class="spec-row"><span>Infill</span><span>${p.infill || '25%'}</span></div></div>
             ${reviews.length ? `<div class="reviews-section"><h2>Reviews (${reviews.length})</h2>${reviews.map(r => `<div class="review"><div class="review-header"><strong>${r.reviewer_name}</strong><span class="review-rating">${'★'.repeat(r.rating)} (${r.rating}/5)</span></div><p>${r.comment || ''}</p></div>`).join('')}</div>` : ''}
-            ${currentUser ? `<div class="write-review"><h3>Write a Review</h3><form onsubmit="handleReview(event, ${p.id})"><div class="field"><label>Rating</label><select id="reviewRating"><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Average</option><option value="2">2 - Poor</option><option value="1">1 - Terrible</option></select></div><div class="field"><label>Comment</label><textarea id="reviewComment" rows="3" placeholder="Share your experience..."></textarea></div><button type="submit" class="btn btn-primary">Submit Review</button></form></div>` : ''}
+            ${canReview && !hasReviewed ? `<div class="write-review"><h3>Write a Review</h3><form onsubmit="handleReview(event, ${p.id})"><div class="field"><label>Rating</label><select id="reviewRating"><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Average</option><option value="2">2 - Poor</option><option value="1">1 - Terrible</option></select></div><div class="field"><label>Comment</label><textarea id="reviewComment" rows="3" placeholder="Share your experience..."></textarea></div><button type="submit" class="btn btn-primary">Submit Review</button></form></div>` : ''}
+            ${canReview && hasReviewed ? `<div class="already-reviewed"><p>✓ You've already reviewed this part</p></div>` : ''}
+            ${currentUser && !canReview ? `<div class="review-locked"><p>📦 Purchase this part to leave a review</p></div>` : ''}
         </div>
         <div class="detail-right">
             ${p.featured ? '<span class="detail-featured-badge">Featured</span>' : ''}
@@ -2605,7 +2827,7 @@ async function printShopsView(partId) {
                                     Request Quote
                                 </button>
                             ` : `
-                                <button class="btn btn-sm btn-primary" onclick="go('printshop', ${shop.id})">View Shop</button>
+                                <button class="btn btn-sm btn-primary" onclick="showShopPopup(${shop.id})">View Shop</button>
                             `}
                         </div>
                         

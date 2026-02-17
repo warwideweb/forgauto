@@ -4262,3 +4262,270 @@ body.dark .download-email-notice {
         text-align: center;
     }
 }
+
+/* v7.0: Mobile improvements, review system, shop popup */
+
+/* Nav message badge */
+.nav-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ef4444;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 10px;
+    margin-left: 6px;
+    padding: 0 5px;
+}
+
+/* Mobile header for part page */
+.detail-mobile-header {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .detail-mobile-header {
+        display: block;
+        padding: 16px;
+        background: var(--card);
+        border-radius: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .detail-mobile-header h1 {
+        font-size: 22px;
+        margin: 8px 0;
+    }
+    
+    .detail-mobile-header .detail-price {
+        font-size: 24px;
+        margin-top: 12px;
+    }
+    
+    /* Hide duplicate info in right column on mobile */
+    .detail-right .detail-breadcrumb,
+    .detail-right > h1,
+    .detail-right > .detail-seller,
+    .detail-right > .detail-price,
+    .detail-right .detail-featured-badge {
+        display: none;
+    }
+}
+
+/* Review status indicators */
+.already-reviewed, .review-locked {
+    padding: 16px;
+    border-radius: 8px;
+    margin-top: 16px;
+    text-align: center;
+}
+
+.already-reviewed {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #86efac;
+}
+
+.review-locked {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+/* Reviews tab in dashboard */
+.section-subtitle {
+    color: var(--muted);
+    margin-bottom: 20px;
+}
+
+.review-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.review-item-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: var(--card);
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+.review-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.review-item-info strong {
+    font-size: 15px;
+}
+
+.review-item-info span {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.review-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.review-status.reviewed {
+    color: #16a34a;
+}
+
+.review-stars {
+    color: #f59e0b;
+    font-size: 14px;
+}
+
+/* Review modal */
+.review-modal-name {
+    font-size: 16px;
+    color: var(--muted);
+    margin-bottom: 20px;
+}
+
+.star-rating-input {
+    display: flex;
+    gap: 8px;
+    font-size: 32px;
+    cursor: pointer;
+}
+
+.star-input {
+    color: #d1d5db;
+    transition: color 0.15s;
+}
+
+.star-input.active, .star-input:hover {
+    color: #f59e0b;
+}
+
+/* Shop popup modal */
+.shop-modal-box {
+    max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+.shop-modal-header {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.shop-modal-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.shop-modal-logo-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.shop-modal-info h2 {
+    margin-bottom: 8px;
+}
+
+.shop-modal-rating {
+    color: #f59e0b;
+    margin-bottom: 4px;
+}
+
+.shop-modal-rating span {
+    color: var(--muted);
+    margin-left: 8px;
+}
+
+.shop-modal-location {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.shop-modal-section {
+    margin-bottom: 20px;
+}
+
+.shop-modal-section h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.shop-modal-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.shop-modal-spec {
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+}
+
+.shop-modal-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.shop-modal-gallery img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.shop-modal-contact {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Mobile optimizations for images */
+@media (max-width: 768px) {
+    .grid img, .thumb, .part-card img {
+        /* Use smaller images on mobile */
+        image-rendering: -webkit-optimize-contrast;
+    }
+    
+    .shop-modal-gallery {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .review-item-card {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    
+    .review-status {
+        align-items: flex-start;
+        flex-direction: row;
+        gap: 10px;
+    }
+}
