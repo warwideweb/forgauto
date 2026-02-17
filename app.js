@@ -1,7 +1,7 @@
 // ForgAuto — 3D Marketplace for Cars
 // Version 4.0 - Major Fixes
 
-const VERSION = '7.4';
+const VERSION = '7.5';
 const API_URL = 'https://forgauto-api.warwideweb.workers.dev'; // Cloudflare Worker API
 
 // v7.4: HTML sanitization to prevent XSS attacks
@@ -990,8 +990,8 @@ async function dashboardView() {
     
     const roleLabels = { seller: 'Seller', designer: 'Designer', printshop: 'Print Shop' };
     
-    // v7.4: Check email verification status
-    const needsVerification = currentUser && currentUser.email_verified === false;
+    // v7.4: Check email verification status (skip for Google OAuth users who are auto-verified)
+    const needsVerification = currentUser && currentUser.email_verified !== true && currentUser.email_verified !== 1;
     
     return `<div class="dashboard">
         ${needsVerification ? `
@@ -2897,10 +2897,29 @@ async function handleBuyPart(partId) {
     }
     
     try {
-        const result = await api(`/api/parts/${partId}/purchase`, { method: 'POST' });
+        // v7.5: Use Stripe checkout for purchases
+        const result = await api('/api/stripe/checkout/purchase', { 
+            method: 'POST',
+            body: JSON.stringify({ part_id: partId })
+        });
         
-        // v5.0: Show download modal with actual download link
-        showDownloadModal(result);
+        if (result && result.url) {
+            // Redirect to Stripe checkout
+            window.location.href = result.url;
+        } else if (result && result.purchased) {
+            // Already purchased - show download
+            alert('You already own this part! Refreshing page...');
+            go('part', partId);
+        } else if (result && result.error) {
+            // Handle specific errors
+            if (result.error.includes('Seller has not connected Stripe')) {
+                alert('This seller has not set up payments yet. Please contact them directly.');
+            } else if (result.error.includes('Cannot buy your own part')) {
+                alert('You cannot buy your own listing.');
+            } else {
+                alert('Error: ' + result.error);
+            }
+        }
     } catch (err) {
         alert('Error: ' + err.message);
     }
