@@ -1,4 +1,4 @@
-# ForgAuto v7.0
+# ForgAuto v7.1
 
 The 3D Marketplace for Automotive Parts.
 
@@ -84,6 +84,7 @@ npx wrangler d1 execute forgauto-db --file=migrations/003_printshop_quotes.sql
 ```
 
 ## Version History
+- v7.1 - Fixed: seller rating from actual reviews (not hardcoded), mobile layout restructure, My Reviews with product links/prices/your rating, review API endpoint fix
 - v7.0 - Message badge, mobile-first part view, review gating, My Reviews tab, print shop popup, ownership checkbox, lazy loading
 - v6.9 - Seller ratings, ownership checkbox, enhanced quotes with payment options
 - v6.8 - Country/State fields, verified blue star, mobile fixes, backend updates

@@ -1,7 +1,7 @@
 // ForgAuto — 3D Marketplace for Cars
 // Version 4.0 - Major Fixes
 
-const VERSION = '7.0';
+const VERSION = '7.1';
 const API_URL = 'https://forgauto-api.warwideweb.workers.dev'; // Cloudflare Worker API
 
 // State
@@ -966,17 +966,18 @@ async function dashboardView() {
                     ${myPurchases.map(p => `
                         <div class="review-item-card">
                             <div class="review-item-info">
-                                <strong>${p.title}</strong>
-                                <span>by ${p.seller_name}</span>
+                                <a href="#part/${p.part_id}" onclick="go('part', ${p.part_id}); return false;" class="review-item-title">${p.title}</a>
+                                <span>by ${p.seller_name} · <strong>$${(p.price || 0).toFixed(2)}</strong></span>
+                                ${p.reviewed ? `<span class="your-rating">Your rating: ${'★'.repeat(p.review_rating || 5)} (${p.review_rating || 5}/5)</span>` : ''}
                             </div>
-                            ${p.reviewed ? `
-                                <div class="review-status reviewed">
-                                    <span class="review-stars">${'★'.repeat(p.review_rating || 5)}</span>
-                                    <span>Reviewed</span>
-                                </div>
-                            ` : `
-                                <button class="btn btn-sm btn-primary" onclick="openReviewModal('part', ${p.part_id}, '${(p.title || '').replace(/'/g, "\\'")}')">Write Review</button>
-                            `}
+                            <div class="review-item-actions">
+                                <a href="#part/${p.part_id}" onclick="go('part', ${p.part_id}); return false;" class="btn btn-sm btn-outline">View</a>
+                                ${p.reviewed ? `
+                                    <span class="review-done-badge">✓ Reviewed</span>
+                                ` : `
+                                    <button class="btn btn-sm btn-primary" onclick="openReviewModal('part', ${p.part_id}, '${(p.title || '').replace(/'/g, "\\'")}')">Write Review</button>
+                                `}
+                            </div>
                         </div>
                     `).join('')}
                 </div>
@@ -989,16 +990,16 @@ async function dashboardView() {
                         <div class="review-item-card">
                             <div class="review-item-info">
                                 <strong>${q.shop_name}</strong>
-                                <span>Print job for: ${q.part_title || 'Custom part'}</span>
+                                <span>Print job for: ${q.part_title || 'Custom part'} · <strong>$${(q.total_paid || q.quoted_price || 0).toFixed(2)}</strong></span>
+                                ${q.shop_reviewed ? `<span class="your-rating">Your rating: ${'★'.repeat(q.shop_review_rating || 5)} (${q.shop_review_rating || 5}/5)</span>` : ''}
                             </div>
-                            ${q.shop_reviewed ? `
-                                <div class="review-status reviewed">
-                                    <span class="review-stars">${'★'.repeat(q.shop_review_rating || 5)}</span>
-                                    <span>Reviewed</span>
-                                </div>
-                            ` : `
-                                <button class="btn btn-sm btn-primary" onclick="openReviewModal('shop', ${q.shop_id}, '${(q.shop_name || '').replace(/'/g, "\\'")}')">Write Review</button>
-                            `}
+                            <div class="review-item-actions">
+                                ${q.shop_reviewed ? `
+                                    <span class="review-done-badge">✓ Reviewed</span>
+                                ` : `
+                                    <button class="btn btn-sm btn-primary" onclick="openReviewModal('shop', ${q.shop_id}, '${(q.shop_name || '').replace(/'/g, "\\'")}')">Write Review</button>
+                                `}
+                            </div>
                         </div>
                     `).join('')}
                 </div>
@@ -1678,7 +1679,8 @@ async function submitReviewFromModal(e, type, id) {
     const comment = document.getElementById('modalReviewComment').value;
     
     try {
-        const endpoint = type === 'shop' ? `/api/printshops/${id}/review` : `/api/parts/${id}/review`;
+        // Use correct endpoint (parts uses /reviews plural, shops uses /review singular)
+        const endpoint = type === 'shop' ? `/api/printshops/${id}/reviews` : `/api/parts/${id}/reviews`;
         await api(endpoint, {
             method: 'POST',
             body: JSON.stringify({ rating, comment })
@@ -2469,6 +2471,12 @@ async function partView(id) {
     const images = p.images || [p.img] || ['https://via.placeholder.com/600x450'];
     const reviews = p.reviews || [];
     
+    // v7.1: Calculate actual seller rating from reviews (not hardcoded!)
+    const actualRating = reviews.length > 0 
+        ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length)
+        : (p.seller_rating || 0);
+    const displayRating = actualRating > 0 ? actualRating : null;
+    
     // FIX 13: Show 3D viewer + images together like Thingiverse
     const hasFile = !!p.file_url;
     
@@ -2477,13 +2485,11 @@ async function partView(id) {
     const hasReviewed = p.user_reviewed || false;
     
     return `<div class="detail">
-        <!-- Mobile header: Title, seller, rating shown first on mobile -->
+        <!-- Mobile header: Title, seller shown first on mobile -->
         <div class="detail-mobile-header">
             ${p.featured ? '<span class="detail-featured-badge">Featured</span>' : ''}
-            <div class="detail-breadcrumb">${p.make} / ${p.model} / ${p.category}</div>
             <h1>${p.title}</h1>
-            <div class="detail-seller"><span class="seller-avatar">${p.seller_avatar_url ? `<img src="${p.seller_avatar_url}" alt="${p.seller_name}">` : (p.seller_name||'S').charAt(0)}</span><span>by <strong>${p.seller_name || 'Seller'}</strong> <span class="seller-rating">${'★'.repeat(Math.floor(p.seller_rating || 5))}${(p.seller_rating || 5) % 1 >= 0.5 ? '½' : ''} (${(p.seller_rating || 5).toFixed(1)})</span></span><span class="detail-downloads">${p.downloads || 0} downloads</span></div>
-            <div class="detail-price">$${(p.price || 0).toFixed(2)}</div>
+            <div class="detail-seller"><span class="seller-avatar">${p.seller_avatar_url ? `<img src="${p.seller_avatar_url}" alt="${p.seller_name}">` : (p.seller_name||'S').charAt(0)}</span><span>by <strong>${p.seller_name || 'Seller'}</strong>${displayRating ? ` <span class="seller-rating">${'★'.repeat(Math.floor(displayRating))}${displayRating % 1 >= 0.5 ? '½' : ''} (${displayRating.toFixed(1)})</span>` : ''}</span></div>
         </div>
         
         <div class="detail-left">
@@ -2495,7 +2501,26 @@ async function partView(id) {
                     ${images.map((img, i) => `<img src="${img}" alt="${p.title}" class="thumb" loading="lazy" onclick="showGalleryImage('${img}', this)">`).join('')}
                 </div>
             </div>
-            <div class="detail-desc"><h2>Description</h2><p>${p.description || 'No description provided.'}</p></div>
+            
+            <!-- Mobile actions: Description, Price, Buttons (shown on mobile after gallery) -->
+            <div class="detail-mobile-actions">
+                <div class="detail-desc"><h2>Description</h2><p>${p.description || 'No description provided.'}</p></div>
+                <div class="detail-price">$${(p.price || 0).toFixed(2)}</div>
+                <div class="detail-actions">
+                    ${p.purchased || (currentUser && currentUser.id === p.user_id) ? 
+                        (p.file_urls && p.file_urls.length > 1 ? 
+                            `<button class="btn btn-lg btn-primary" onclick="downloadPackageZip(${p.id}, '${(p.title || 'part').replace(/'/g, "\\'")}')">Download All (${p.file_urls.length} files)</button>` :
+                            `<a href="${p.file_url}" download class="btn btn-lg btn-primary">Download File</a>`) :
+                        `<button class="btn btn-lg btn-primary" onclick="handleBuyPart(${p.id})">Buy Now - $${(p.price || 0).toFixed(2)}</button>`}
+                    <button class="btn btn-lg btn-outline" onclick="openContactModal(${p.user_id}, '${(p.seller_name || 'Seller').replace(/'/g, "\\'")}', '${(p.title || '').replace(/'/g, "\\'")}', ${p.id}, '${(p.images && p.images[0] || '').replace(/'/g, "\\'")}')">Contact Seller</button>
+                </div>
+                <button class="btn btn-outline" style="width:100%;margin-top:10px;" onclick="openQuoteRequestModal(${p.id}, '${(p.title || '').replace(/'/g, "\\'")}', '${(p.images && p.images[0] || '').replace(/'/g, "\\'")}')">
+                    Request Print Quotes
+                </button>
+            </div>
+            
+            <!-- Desktop description (hidden on mobile) -->
+            <div class="detail-desc detail-desc-desktop"><h2>Description</h2><p>${p.description || 'No description provided.'}</p></div>
             <div class="specs"><h2>Specifications</h2><div class="spec-row"><span>Vehicle</span><span>${p.make} ${p.model}</span></div><div class="spec-row"><span>Category</span><span>${p.category}</span></div><div class="spec-row"><span>Format</span><span>${p.file_format || 'STL'}</span></div><div class="spec-row"><span>File Size</span><span>${p.file_size || 'N/A'}</span></div><div class="spec-row"><span>Material</span><span>${p.material || 'PLA'}</span></div><div class="spec-row"><span>Infill</span><span>${p.infill || '25%'}</span></div></div>
             ${reviews.length ? `<div class="reviews-section"><h2>Reviews (${reviews.length})</h2>${reviews.map(r => `<div class="review"><div class="review-header"><strong>${r.reviewer_name}</strong><span class="review-rating">${'★'.repeat(r.rating)} (${r.rating}/5)</span></div><p>${r.comment || ''}</p></div>`).join('')}</div>` : ''}
             ${canReview && !hasReviewed ? `<div class="write-review"><h3>Write a Review</h3><form onsubmit="handleReview(event, ${p.id})"><div class="field"><label>Rating</label><select id="reviewRating"><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Average</option><option value="2">2 - Poor</option><option value="1">1 - Terrible</option></select></div><div class="field"><label>Comment</label><textarea id="reviewComment" rows="3" placeholder="Share your experience..."></textarea></div><button type="submit" class="btn btn-primary">Submit Review</button></form></div>` : ''}
@@ -2506,7 +2531,7 @@ async function partView(id) {
             ${p.featured ? '<span class="detail-featured-badge">Featured</span>' : ''}
             <div class="detail-breadcrumb">${p.make} / ${p.model} / ${p.category}</div>
             <h1>${p.title}</h1>
-            <div class="detail-seller"><span class="seller-avatar">${p.seller_avatar_url ? `<img src="${p.seller_avatar_url}" alt="${p.seller_name}">` : (p.seller_name||'S').charAt(0)}</span><span>by <strong>${p.seller_name || 'Seller'}</strong> <span class="seller-rating">${'★'.repeat(Math.floor(p.seller_rating || 5))}${(p.seller_rating || 5) % 1 >= 0.5 ? '½' : ''} (${(p.seller_rating || 5).toFixed(1)})</span></span><span class="detail-downloads">${p.downloads || 0} downloads</span></div>
+            <div class="detail-seller"><span class="seller-avatar">${p.seller_avatar_url ? `<img src="${p.seller_avatar_url}" alt="${p.seller_name}">` : (p.seller_name||'S').charAt(0)}</span><span>by <strong>${p.seller_name || 'Seller'}</strong>${displayRating ? ` <span class="seller-rating">${'★'.repeat(Math.floor(displayRating))}${displayRating % 1 >= 0.5 ? '½' : ''} (${displayRating.toFixed(1)})</span>` : ''}</span><span class="detail-downloads">${p.downloads || 0} downloads</span></div>
             <div class="detail-price">$${(p.price || 0).toFixed(2)}</div>
             <div class="detail-trust"><span>Secure Payment</span><span>Instant Download</span><span>$10 Listing Fee</span></div>
             <div class="detail-actions">
