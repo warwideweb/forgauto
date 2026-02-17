@@ -1,4 +1,4 @@
-# ForgAuto v7.3
+# ForgAuto v7.4
 
 The 3D Marketplace for Automotive Parts.
 
@@ -52,6 +52,25 @@ npx wrangler deploy
 ```
 
 ## Version History
+
+### v7.4
+- **Security:**
+  - HTML sanitization (XSS prevention)
+  - Secure file downloads (auth-gated)
+  - Email verification system
+  - Report/flag system
+- **Bug fixes:**
+  - Deleted test listings
+  - Fixed Top Designers null/undefined
+  - Removed seller_email from public API
+  - Fixed Terms pricing ($5 → $10)
+  - Fixed profile route redirect
+- **UI improvements:**
+  - 404.html SPA redirect
+  - Removed fake demo data (empty states)
+  - Sort options on browse page
+  - OG tags and dynamic titles
+  - Admin panel with ADMIN_KEY
 
 ### v7.3
 - **Clean mobile product page layout:**
