@@ -1,7 +1,7 @@
 // ForgAuto — 3D Marketplace for Cars
 // Version 4.0 - Major Fixes
 
-const VERSION = '4.1';
+const VERSION = '5.0';
 const API_URL = 'https://forgauto-api.warwideweb.workers.dev'; // Cloudflare Worker API
 
 // State
@@ -735,8 +735,14 @@ function homeView() {
             <div class="cat-grid">${categories.map(c => `<a href="#" class="cat-item" onclick="filterCat='${c.name}';go('browse'); return false;"><img src="${c.img}" alt="${c.name}"><span>${c.name}</span></a>`).join('')}</div>
         </div>
 
-        ${featuredParts.length ? `<div class="section featured-section"><div class="section-head"><h2>Featured Parts</h2><a href="#" onclick="go('browse'); return false;">View all</a></div>
-            <div class="grid">${featuredParts.map(p => cardHTML(p)).join('')}</div>
+        ${featuredParts.length ? `<div class="section featured-section-v5">
+            <div class="featured-header">
+                <div class="featured-badge-lg">★ FEATURED</div>
+                <h2>Featured Parts</h2>
+                <p>Premium listings from top sellers</p>
+            </div>
+            <div class="featured-grid">${featuredParts.map(p => cardHTML(p)).join('')}</div>
+            <div class="featured-footer"><a href="#" onclick="go('browse'); return false;" class="btn btn-outline">Browse All Parts →</a></div>
         </div>` : ''}
         
         <div class="section"><div class="section-head"><h2>New Parts</h2>${validParts.length ? `<a href="#" onclick="go('browse'); return false;">View all</a>` : ''}</div>
@@ -767,6 +773,11 @@ function browseView() {
     if (filterModel) filtered = filtered.filter(p => p.model === filterModel);
     const title = filterMake && filterModel ? `${filterMake} ${filterModel}` : filterMake ? filterMake : filterCat ? filterCat : filter ? `"${filter}"` : 'All Parts';
     
+    // v5.0: Sort featured parts to top
+    const featuredParts = filtered.filter(p => p.featured || p.premiered);
+    const regularParts = filtered.filter(p => !p.featured && !p.premiered);
+    const sortedParts = [...featuredParts, ...regularParts];
+    
     return `<div class="browse">
         <aside class="sidebar">
             <h3>Category</h3>
@@ -786,8 +797,9 @@ function browseView() {
             </select>` : ''}
             <div class="sidebar-cta"><p>Don't have a printer?</p><a href="#" onclick="go('printshops'); return false;" class="btn btn-outline" style="width:100%">Find Print Shop</a></div>
         </aside>
-        <div><div class="browse-head"><h1>${title}</h1><span style="color:var(--muted)">${filtered.length} parts</span></div>
-            <div class="grid">${filtered.length ? filtered.map(cardHTML).join('') : '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:48px 0;">No parts found.</p>'}</div>
+        <div><div class="browse-head"><h1>${title}</h1><span style="color:var(--muted)">${sortedParts.length} parts</span></div>
+            ${featuredParts.length > 0 ? `<div class="browse-featured-label"><span>★</span> Featured Listings</div>` : ''}
+            <div class="grid">${sortedParts.length ? sortedParts.map(cardHTML).join('') : '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:48px 0;">No parts found.</p>'}</div>
         </div>
     </div>`;
 }
@@ -817,8 +829,14 @@ function sellView() {
         </div>
         <div class="form"><h2>Create Listing</h2>
             <form onsubmit="handleCreateListing(event)">
-            <div class="field"><label>Part Name</label><input type="text" id="partTitle" placeholder="e.g., BMW E30 Phone Mount" required></div>
-            <div class="field"><label>Description</label><textarea id="partDesc" rows="4" placeholder="Describe fitment, materials..." required></textarea></div>
+            <div class="field">
+                <label>Part Name <span class="char-limit" id="titleCharCount">0/${TITLE_MAX_LENGTH}</span></label>
+                <input type="text" id="partTitle" placeholder="e.g., BMW E30 Phone Mount" required maxlength="${TITLE_MAX_LENGTH}" oninput="updateCharCount('partTitle', 'titleCharCount', ${TITLE_MAX_LENGTH})">
+            </div>
+            <div class="field">
+                <label>Description <span class="char-limit" id="descCharCount">0/${DESC_MAX_LENGTH}</span></label>
+                <textarea id="partDesc" rows="4" placeholder="Describe fitment, materials..." required maxlength="${DESC_MAX_LENGTH}" oninput="updateCharCount('partDesc', 'descCharCount', ${DESC_MAX_LENGTH})"></textarea>
+            </div>
             <div class="field-row" id="makeModelRow"><div class="field"><label>Make</label><select id="partMake" required onchange="updatePartModels()">${carMakes.map(m => `<option>${m}</option>`).join('')}</select></div><div class="field" id="modelField"><label>Model</label><select id="partModel"><option>Select model...</option></select></div></div>
             <div class="field-row"><div class="field"><label>Category</label><select id="partCat" required>${categories.map(c => `<option>${c.name}</option>`).join('')}</select></div><div class="field"><label>Price (USD)</label><input type="number" id="partPrice" placeholder="4.99" min="0.99" step="0.01" required></div></div>
             <div class="field-row"><div class="field"><label>File Format</label><input type="text" id="partFormat" placeholder="STL, STEP"></div><div class="field"><label>Recommended Material</label><input type="text" id="partMaterial" placeholder="PLA, PETG, ABS"></div></div>
@@ -1216,15 +1234,66 @@ async function partView(id) {
 }
 
 async function handleBuyPart(partId) {
-    if (!currentUser) { alert('Please login to purchase'); go('login'); return; }
+    if (!currentUser) { 
+        alert('Please login to purchase and download parts.'); 
+        go('login'); 
+        return; 
+    }
     
     try {
-        await api(`/api/parts/${partId}/purchase`, { method: 'POST' });
-        alert('Purchase successful! You can now download the file and leave a review. (Stripe integration coming soon)');
-        go('part', partId);
+        const result = await api(`/api/parts/${partId}/purchase`, { method: 'POST' });
+        
+        // v5.0: Show download modal with actual download link
+        showDownloadModal(result);
     } catch (err) {
         alert('Error: ' + err.message);
     }
+}
+
+// v5.0: Download modal with actual download + email notification
+function showDownloadModal(purchaseResult) {
+    const modal = document.createElement('div');
+    modal.id = 'downloadModal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box download-modal">
+            <button class="modal-close" onclick="closeDownloadModal()">×</button>
+            <div class="download-success-icon">✓</div>
+            <h2>Purchase Complete!</h2>
+            <p class="download-subtitle">Your file is ready to download</p>
+            
+            <div class="download-file-info">
+                <div class="download-file-icon">📦</div>
+                <div class="download-file-details">
+                    <strong>${purchaseResult.part_title || 'Part File'}</strong>
+                    <span>${purchaseResult.file_format || 'STL'} • ${purchaseResult.file_size || 'N/A'}</span>
+                </div>
+            </div>
+            
+            <a href="${purchaseResult.download_url || purchaseResult.file_url}" download class="btn btn-lg btn-primary download-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download File
+            </a>
+            
+            <div class="download-email-notice">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <span>A download link has also been sent to <strong>${currentUser.email}</strong></span>
+            </div>
+            
+            <div class="download-actions">
+                <button onclick="closeDownloadModal(); go('part', ${purchaseResult.part_id});" class="btn btn-outline">Leave a Review</button>
+                <button onclick="closeDownloadModal();" class="btn btn-outline">Close</button>
+            </div>
+            
+            <p class="download-note">Stripe payment integration coming soon. Currently free for testing.</p>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function closeDownloadModal() {
+    const modal = document.getElementById('downloadModal');
+    if (modal) modal.remove();
 }
 
 async function handleBoostPart(partId) {
@@ -1365,8 +1434,18 @@ function filterPublicParts(partsArray) {
 
 // ============ CARD RENDERING ============
 
+// CHARACTER LIMITS
+const TITLE_MAX_LENGTH = 60;
+const DESC_MAX_LENGTH = 500;
+
+// Truncate text helper
+function truncateText(text, maxLen) {
+    if (!text) return '';
+    return text.length > maxLen ? text.substring(0, maxLen) + '...' : text;
+}
+
 // PUBLIC card - NEVER shows placeholder, only renders if valid image exists
-// FIX 8: Don't hide card on image error, show gray fallback
+// v5.0: Added seller username + avatar, character limits, featured border
 function cardHTML(p) {
     const img = getValidImage(p);
     // If no valid image, don't render card at all in public view
@@ -1374,13 +1453,30 @@ function cardHTML(p) {
     
     const errorFallback = "this.onerror=null; this.src='data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect fill="#333" width="400" height="300"/><text x="50%" y="50%" fill="#999" font-family="sans-serif" font-size="16" text-anchor="middle" dy=".3em">Image unavailable</text></svg>') + "'";
     
-    return `<div class="card" onclick="go('part', ${p.id}); return false;">
+    // Truncate title to max length
+    const displayTitle = truncateText(p.title, TITLE_MAX_LENGTH);
+    
+    // Seller info
+    const sellerName = p.seller_name || 'Seller';
+    const sellerInitial = sellerName.charAt(0).toUpperCase();
+    const sellerAvatar = p.seller_avatar_url;
+    
+    // Featured border
+    const isFeatured = p.featured || p.premiered;
+    const cardClass = isFeatured ? 'card card-featured' : 'card';
+    
+    return `<div class="${cardClass}" onclick="go('part', ${p.id}); return false;">
         <div class="card-image">
-            <img src="${img}" alt="${p.title}" onerror="${errorFallback}">
+            <img src="${img}" alt="${displayTitle}" onerror="${errorFallback}">
             <span class="card-badge">${p.category || 'Part'}</span>
+            ${isFeatured ? '<span class="card-featured-badge">★ FEATURED</span>' : ''}
         </div>
         <div class="card-body">
-            <div class="card-title">${p.title}</div>
+            <div class="card-title">${displayTitle}</div>
+            <div class="card-seller">
+                <div class="card-seller-avatar">${sellerAvatar ? `<img src="${sellerAvatar}" alt="${sellerName}">` : sellerInitial}</div>
+                <span class="card-seller-name">${sellerName}</span>
+            </div>
             <div class="card-meta">
                 <span class="card-cat">${p.make && p.make !== 'Non-Specific' ? p.make : ''}${p.model && p.model !== 'All' && p.model !== 'Any' ? ' ' + p.model : ''}</span>
                 <span class="card-price">$${(p.price || 0).toFixed(2)}</span>
@@ -1402,19 +1498,24 @@ function sellerCardHTML(p) {
     if (!hasImage) missingInfo.push('Photo');
     
     // Card classes
-    const cardClass = `card ${!isComplete ? 'card-warning' : ''}`;
+    const isFeatured = p.featured || p.premiered;
+    const cardClass = `card ${!isComplete ? 'card-warning' : ''} ${isFeatured ? 'card-featured' : ''}`;
     
     // Image: use valid image or gray placeholder (NEVER blue)
     const displayImg = img || 'https://placehold.co/600x450/333333/999999?text=';
     
+    // Truncate title
+    const displayTitle = truncateText(p.title, TITLE_MAX_LENGTH);
+    
     return `<div class="${cardClass}" onclick="go('part', ${p.id}); return false;">
         <div class="card-image">
-            <img src="${displayImg}" alt="${p.title}">
+            <img src="${displayImg}" alt="${displayTitle}">
             <span class="card-badge">${p.category || 'Part'}</span>
             ${!isComplete ? `<span class="warning-badge">IMAGE REQUIRED</span>` : ''}
+            ${isFeatured ? '<span class="card-featured-badge">★ FEATURED</span>' : ''}
         </div>
         <div class="card-body">
-            <div class="card-title">${p.title}</div>
+            <div class="card-title">${displayTitle}</div>
             ${!isComplete ? `<div class="warning-text">Not visible publicly. Missing: ${missingInfo.join(', ')}</div>` : ''}
             <div class="card-meta">
                 <span class="card-cat">${p.make && p.make !== 'Non-Specific' ? p.make : ''}${p.model && p.model !== 'All' && p.model !== 'Any' ? ' ' + p.model : ''}</span>
@@ -1422,6 +1523,18 @@ function sellerCardHTML(p) {
             </div>
         </div>
     </div>`;
+}
+
+// v5.0: Character counter for title/description
+function updateCharCount(inputId, counterId, maxLen) {
+    const input = document.getElementById(inputId);
+    const counter = document.getElementById(counterId);
+    if (input && counter) {
+        const len = input.value.length;
+        counter.textContent = `${len}/${maxLen}`;
+        counter.classList.toggle('char-limit-warning', len > maxLen * 0.9);
+        counter.classList.toggle('char-limit-full', len >= maxLen);
+    }
 }
 
 function handlePhotoUpload(event) { for (let file of event.target.files) { if (uploadedPhotos.length >= 10) break; uploadedPhotoFiles.push(file); const reader = new FileReader(); reader.onload = e => { uploadedPhotos.push(e.target.result); renderPhotoGrid(); }; reader.readAsDataURL(file); } }
