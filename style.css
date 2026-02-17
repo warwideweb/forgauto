@@ -3015,3 +3015,24 @@ body.dark .download-email-notice {
     .portfolio-grid-v6 { grid-template-columns: repeat(2, 1fr); }
     .checkbox-grid { grid-template-columns: 1fr; }
 }
+
+/* v6.2: Loading spinner */
+.loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
+
+.loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

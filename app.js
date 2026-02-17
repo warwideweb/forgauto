@@ -1,7 +1,7 @@
 // ForgAuto — 3D Marketplace for Cars
 // Version 4.0 - Major Fixes
 
-const VERSION = '6.1';
+const VERSION = '6.2';
 const API_URL = 'https://forgauto-api.warwideweb.workers.dev'; // Cloudflare Worker API
 
 // State
@@ -251,6 +251,12 @@ function updateModels() {
 
 async function render(data) {
     const app = document.getElementById('app');
+    
+    // v6.2: Clear content and show loading for views that fetch data (fixes cache glitch)
+    if (view === 'home' || view === 'browse') {
+        app.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div></div>';
+    }
+    
     if (view === 'home') { await loadParts(); app.innerHTML = homeView(); }
     else if (view === 'browse') { await loadParts(); app.innerHTML = browseView(); }
     else if (view === 'designers') { await loadDesigners(); app.innerHTML = designersView(); }
@@ -863,7 +869,7 @@ function designersView() {
             <div class="designers-header-content">
                 <h1>Hire a Designer</h1>
                 <p>Work with verified automotive 3D specialists. All designers have 5+ completed projects on ForgAuto.</p>
-                ${currentUser ? `<a href="#" onclick="go('become-designer'); return false;" class="btn btn-outline">Become a Designer</a>` : ''}
+                ${currentUser ? `<a href="#" onclick="go('become-designer'); return false;" class="btn btn-outline" style="color:#fff !important; border-color:rgba(255,255,255,0.5);">Become a Designer</a>` : ''}
             </div>
         </div>
         
