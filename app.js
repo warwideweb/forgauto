@@ -1,7 +1,7 @@
 // ForgAuto — 3D Marketplace for Cars
 // Version 4.0 - Major Fixes
 
-const VERSION = '6.3';
+const VERSION = '6.4';
 const API_URL = 'https://forgauto-api.warwideweb.workers.dev'; // Cloudflare Worker API
 
 // State
@@ -558,6 +558,7 @@ async function dashboardView() {
             <button class="dash-tab" onclick="showDashTab('messages')">Messages ${unreadCount > 0 ? `<span class="badge-unread">${unreadCount}</span>` : ''}</button>
             <button class="dash-tab" onclick="showDashTab('sales')">Sales</button>
             <button class="dash-tab" onclick="showDashTab('purchases')">Purchases</button>
+            ${currentUser.role === 'designer' ? `<button class="dash-tab" onclick="showDashTab('designer')">Designer Profile</button>` : ''}
             <button class="dash-tab" onclick="showDashTab('settings')">Settings</button>
         </div>
         
@@ -625,6 +626,103 @@ async function dashboardView() {
                 <button type="submit" class="btn btn-primary">Save Changes</button>
             </form>
         </div>
+        
+        ${currentUser.role === 'designer' ? `
+        <div id="dashDesigner" class="dash-content" style="display:none">
+            <h2>Designer Profile</h2>
+            
+            <div class="designer-status-box ${myParts.length >= 5 ? 'status-active' : 'status-pending'}">
+                <div class="status-header">
+                    <span class="status-icon">${myParts.length >= 5 ? '✓' : '⚠'}</span>
+                    <span class="status-text">${myParts.length >= 5 ? 'Designer Status: Active' : 'Designer Status: Pending'}</span>
+                </div>
+                <div class="status-progress">
+                    <span class="progress-count ${myParts.length < 5 ? 'progress-red' : ''}">${myParts.length}/5 uploaded builds</span>
+                    ${myParts.length < 5 ? `<span class="progress-hint">⚠️ Must upload ${5 - myParts.length} more design${5 - myParts.length > 1 ? 's' : ''} on ForgAuto to become a verified designer</span>` : '<span class="progress-hint">✓ You are a verified designer!</span>'}
+                </div>
+            </div>
+            
+            <div class="designer-profile-form">
+                <h3>Public Profile Information</h3>
+                
+                <div class="field">
+                    <label>Location</label>
+                    <input type="text" id="designerLocation" value="${currentUser.location || ''}" placeholder="City, Country (e.g., Los Angeles, USA)">
+                </div>
+                
+                <div class="field">
+                    <label>Resume / About</label>
+                    <textarea id="designerResume" rows="4" placeholder="Tell clients about your experience, skills, and what makes you unique...">${currentUser.resume || currentUser.bio || ''}</textarea>
+                </div>
+                
+                <div class="field">
+                    <label>Portfolio Images</label>
+                    <div class="portfolio-grid" id="portfolioGrid">
+                        ${(currentUser.portfolio_images || []).map((img, i) => `
+                            <div class="portfolio-item">
+                                <img src="${img}" alt="Portfolio ${i+1}">
+                                <button type="button" class="portfolio-remove" onclick="removePortfolioImage(${i})">×</button>
+                            </div>
+                        `).join('')}
+                        <div class="portfolio-add" onclick="document.getElementById('portfolioInput').click()">
+                            <span>+</span>
+                            <span>Add Image</span>
+                        </div>
+                    </div>
+                    <input type="file" id="portfolioInput" accept="image/*" multiple hidden onchange="handlePortfolioUpload(event)">
+                    <p class="field-hint">Showcase your best work (renders, photos of printed parts)</p>
+                </div>
+                
+                <h3>Social Media & Links</h3>
+                
+                <div class="field">
+                    <label>Website / Portfolio URL</label>
+                    <input type="url" id="designerWebsite" value="${currentUser.website || ''}" placeholder="https://yourportfolio.com">
+                </div>
+                
+                <div class="field-row">
+                    <div class="field">
+                        <label>Instagram</label>
+                        <input type="text" id="designerInstagram" value="${currentUser.instagram || ''}" placeholder="@username">
+                    </div>
+                    <div class="field">
+                        <label>Twitter/X</label>
+                        <input type="text" id="designerTwitter" value="${currentUser.twitter || ''}" placeholder="@username">
+                    </div>
+                </div>
+                
+                <div class="field-row">
+                    <div class="field">
+                        <label>YouTube</label>
+                        <input type="text" id="designerYoutube" value="${currentUser.youtube || ''}" placeholder="Channel URL or @handle">
+                    </div>
+                    <div class="field">
+                        <label>LinkedIn</label>
+                        <input type="text" id="designerLinkedin" value="${currentUser.linkedin || ''}" placeholder="Profile URL">
+                    </div>
+                </div>
+                
+                <div class="field">
+                    <label>Other Links</label>
+                    <input type="text" id="designerOtherLinks" value="${currentUser.other_links || ''}" placeholder="Behance, Dribbble, GitHub, etc. (comma separated)">
+                </div>
+                
+                <h3>Equipment & Capabilities</h3>
+                
+                <div class="field">
+                    <label>3D Printers Owned</label>
+                    <input type="text" id="designerPrinters" value="${currentUser.printers || ''}" placeholder="e.g., Prusa MK4, Bambu X1C, Ender 3">
+                </div>
+                
+                <div class="field">
+                    <label>Software Used</label>
+                    <input type="text" id="designerSoftware" value="${currentUser.software || ''}" placeholder="e.g., Fusion 360, SolidWorks, Blender">
+                </div>
+                
+                <button type="button" class="btn btn-primary" onclick="handleDesignerProfileUpdate()">Save Designer Profile</button>
+            </div>
+        </div>
+        ` : ''}
     </div>`;
 }
 
@@ -654,6 +752,90 @@ async function handleProfileUpdate(e) {
     } catch (err) {
         alert('Error: ' + err.message);
     }
+}
+
+// Designer profile update handler
+async function handleDesignerProfileUpdate() {
+    const location = document.getElementById('designerLocation')?.value;
+    const resume = document.getElementById('designerResume')?.value;
+    const website = document.getElementById('designerWebsite')?.value;
+    const instagram = document.getElementById('designerInstagram')?.value;
+    const twitter = document.getElementById('designerTwitter')?.value;
+    const youtube = document.getElementById('designerYoutube')?.value;
+    const linkedin = document.getElementById('designerLinkedin')?.value;
+    const other_links = document.getElementById('designerOtherLinks')?.value;
+    const printers = document.getElementById('designerPrinters')?.value;
+    const software = document.getElementById('designerSoftware')?.value;
+    
+    try {
+        await api('/api/profile', {
+            method: 'PUT',
+            body: JSON.stringify({ 
+                location, resume, website, instagram, twitter, 
+                youtube, linkedin, other_links, printers, software 
+            })
+        });
+        currentUser = { ...currentUser, location, resume, website, instagram, twitter, youtube, linkedin, other_links, printers, software };
+        alert('Designer profile updated!');
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+// Portfolio image handlers
+let portfolioImages = [];
+
+async function handlePortfolioUpload(event) {
+    const files = event.target.files;
+    for (let file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        if (file.size > 5 * 1024 * 1024) {
+            alert(`${file.name} is too large (max 5MB)`);
+            continue;
+        }
+        
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const res = await fetch(`${API_URL}/api/upload/photo`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${authToken}` },
+                body: formData
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                portfolioImages.push(data.url);
+                currentUser.portfolio_images = [...(currentUser.portfolio_images || []), data.url];
+                renderPortfolioGrid();
+            }
+        } catch (err) {
+            alert('Error uploading: ' + err.message);
+        }
+    }
+}
+
+function removePortfolioImage(index) {
+    currentUser.portfolio_images = (currentUser.portfolio_images || []).filter((_, i) => i !== index);
+    renderPortfolioGrid();
+}
+
+function renderPortfolioGrid() {
+    const grid = document.getElementById('portfolioGrid');
+    if (!grid) return;
+    grid.innerHTML = `
+        ${(currentUser.portfolio_images || []).map((img, i) => `
+            <div class="portfolio-item">
+                <img src="${img}" alt="Portfolio ${i+1}">
+                <button type="button" class="portfolio-remove" onclick="removePortfolioImage(${i})">×</button>
+            </div>
+        `).join('')}
+        <div class="portfolio-add" onclick="document.getElementById('portfolioInput').click()">
+            <span>+</span>
+            <span>Add Image</span>
+        </div>
+    `;
 }
 
 async function handleAvatarUpload(event) {
