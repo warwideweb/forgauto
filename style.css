@@ -5158,9 +5158,16 @@ main.browse-fullwidth-active {
     
     /* Hide old price/actions in mobile-actions (moved to sticky bar) */
     .detail-mobile-actions .detail-price,
-    .detail-mobile-actions .detail-actions,
-    .detail-mobile-actions > button {
+    .detail-mobile-actions .detail-actions {
         display: none !important;
+    }
+    
+    /* Show quote request button on mobile */
+    .detail-mobile-actions > button.btn-quote-request {
+        display: block !important;
+        width: 100%;
+        margin: 16px 16px;
+        width: calc(100% - 32px);
     }
     
     /* Specs section */

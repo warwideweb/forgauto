@@ -2793,7 +2793,7 @@ async function partView(id) {
                         `<button class="btn btn-lg btn-primary" onclick="handleBuyPart(${p.id})">Buy Now - $${(p.price || 0).toFixed(2)}</button>`}
                     <button class="btn btn-lg btn-outline" onclick="openContactModal(${p.user_id}, '${(p.seller_name || 'Seller').replace(/'/g, "\\'")}', '${(p.title || '').replace(/'/g, "\\'")}', ${p.id}, '${(p.images && p.images[0] || '').replace(/'/g, "\\'")}')">Contact Seller</button>
                 </div>
-                <button class="btn btn-outline" style="width:100%;margin-top:10px;" onclick="openQuoteRequestModal(${p.id}, '${(p.title || '').replace(/'/g, "\\'")}', '${(p.images && p.images[0] || '').replace(/'/g, "\\'")}')">
+                <button class="btn btn-outline btn-quote-request" onclick="openQuoteRequestModal(${p.id}, '${(p.title || '').replace(/'/g, "\\'")}', '${(p.images && p.images[0] || '').replace(/'/g, "\\'")}')">
                     Request Print Quotes
                 </button>
             </div>
