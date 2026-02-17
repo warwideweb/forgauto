@@ -2922,6 +2922,8 @@ async function partView(id) {
 }
 
 async function handleBuyPart(partId) {
+    alert('Buy button clicked! Part ID: ' + partId); // DEBUG - remove after testing
+    
     if (!currentUser) { 
         alert('Please login to purchase and download parts.'); 
         go('login'); 
