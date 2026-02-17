@@ -9,6 +9,16 @@ let currentUser = null;
 let authToken = localStorage.getItem('authToken');
 let isAuthChecking = true; // Prevents flash while checking auth
 
+// Mobile menu toggle
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobileMenu');
+    const hamburger = document.querySelector('.hamburger');
+    if (menu && hamburger) {
+        menu.classList.toggle('open');
+        hamburger.classList.toggle('open');
+    }
+}
+
 // Check auth on load
 async function checkAuth() {
     // Check for OAuth callback token in URL
@@ -67,17 +77,31 @@ async function updateNavAuth() {
         const avatarUrl = currentUser.avatar_url;
         const initial = name.charAt(0).toUpperCase();
         
-        loginBtn.className = 'nav-user-btn'; // Remove btn-outline class
+        loginBtn.className = 'nav-user-btn';
         loginBtn.innerHTML = `<span class="nav-user-wrap">
-            <span class="nav-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="${name}">` : initial}</span>
-            ${unreadCount > 0 ? `<span class="nav-badge-top">${unreadCount > 9 ? '9+' : unreadCount}</span>` : ''}
+            <span class="nav-avatar-container">
+                <span class="nav-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="${name}">` : initial}</span>
+                ${unreadCount > 0 ? `<span class="nav-msg-icon" title="${unreadCount} new messages"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg><span class="msg-count">${unreadCount > 9 ? '9+' : unreadCount}</span></span>` : ''}
+            </span>
             <span class="nav-username">${name}</span>
         </span>`;
         loginBtn.onclick = () => go('dashboard');
+        // Update mobile menu too
+        const mobileLoginBtn = document.getElementById('mobileLoginBtn');
+        if (mobileLoginBtn) {
+            mobileLoginBtn.textContent = name;
+            mobileLoginBtn.onclick = () => { go('dashboard'); toggleMobileMenu(); };
+        }
     } else {
         loginBtn.className = 'btn btn-outline';
         loginBtn.textContent = 'Login';
         loginBtn.onclick = () => go('login');
+        // Update mobile menu too
+        const mobileLoginBtn = document.getElementById('mobileLoginBtn');
+        if (mobileLoginBtn) {
+            mobileLoginBtn.textContent = 'Login';
+            mobileLoginBtn.onclick = () => { go('login'); toggleMobileMenu(); };
+        }
     }
 }
 

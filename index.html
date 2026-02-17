@@ -6,7 +6,7 @@
     <title>ForgAuto — 3D Parts for Cars</title>
     <meta name="description" content="The 3D marketplace for automotive parts. Buy and sell STL files for your car.">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css?v=725">
+    <link rel="stylesheet" href="style.css?v=726">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
@@ -26,7 +26,17 @@
             <a href="#sell" onclick="go('sell'); return false;" class="btn">Sell Parts</a>
             <a href="#login" onclick="go('login'); return false;" class="btn btn-outline" id="loginBtn">Login</a>
         </div>
+        <button class="hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
     </nav>
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#browse" onclick="go('browse'); toggleMobileMenu(); return false;">Browse Parts</a>
+        <a href="#designers" onclick="go('designers'); toggleMobileMenu(); return false;">Hire Designer</a>
+        <a href="#printshops" onclick="go('printshops'); toggleMobileMenu(); return false;">Print Shop</a>
+        <a href="#sell" onclick="go('sell'); toggleMobileMenu(); return false;">Sell Parts</a>
+        <a href="#login" onclick="go('login'); toggleMobileMenu(); return false;" id="mobileLoginBtn">Login</a>
+    </div>
 
     <main id="app"></main>
 
@@ -49,6 +59,6 @@
         </div>
     </footer>
 
-    <script src="app.js?v=725"></script>
+    <script src="app.js?v=726"></script>
 </body>
 </html>
