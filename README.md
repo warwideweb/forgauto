@@ -1,4 +1,4 @@
-# ForgAuto v7.4
+# ForgAuto v7.4.2
 
 The 3D Marketplace for Automotive Parts.
 
@@ -52,6 +52,15 @@ npx wrangler deploy
 ```
 
 ## Version History
+
+### v7.4.2
+- Custom category images (Interior, Exterior, Gauges, Accessories)
+
+### v7.4.1
+- Admin badge in navigation
+- Admin can edit/delete any listing
+- Admin posts for FREE
+- Admin Panel button in dashboard
 
 ### v7.4
 - **Security:**

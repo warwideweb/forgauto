@@ -157,10 +157,10 @@ async function api(endpoint, options = {}) {
 
 // Static data for demo (will be replaced by API)
 const categories = [
-    { name: "Interior", img: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=300&h=300&fit=crop" },
-    { name: "Exterior", img: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=300&h=300&fit=crop" },
-    { name: "Gauges", img: "https://images.unsplash.com/photo-1619405399517-d7fce0f13302?w=300&h=300&fit=crop" },
-    { name: "Accessories", img: "https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=300&h=300&fit=crop" },
+    { name: "Interior", img: "images/categories/interior.jpg" },
+    { name: "Exterior", img: "images/categories/exterior.jpg" },
+    { name: "Gauges", img: "images/categories/gauges.jpg" },
+    { name: "Accessories", img: "images/categories/accessories.jpg" },
     { name: "Performance", img: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=300&h=300&fit=crop" },
     { name: "Lighting", img: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=300&h=300&fit=crop" }
 ];
