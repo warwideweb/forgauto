@@ -344,6 +344,53 @@ async function conversationView(userId) {
     const otherUser = conversation.user || { name: 'User', avatar_url: null };
     const messages = conversation.messages || [];
     
+    // Group messages by part_id
+    const messagesByPart = {};
+    const noPart = [];
+    messages.forEach(m => {
+        if (m.part_id) {
+            if (!messagesByPart[m.part_id]) {
+                messagesByPart[m.part_id] = { part_title: m.part_title, part_image: m.part_image, messages: [] };
+            }
+            messagesByPart[m.part_id].messages.push(m);
+        } else {
+            noPart.push(m);
+        }
+    });
+    
+    // Render grouped messages
+    let messagesHTML = '';
+    
+    // Messages grouped by part
+    Object.entries(messagesByPart).forEach(([partId, data]) => {
+        messagesHTML += `
+            <div class="message-part-group">
+                <div class="message-part-header" onclick="go('part', ${partId})">
+                    ${data.part_image ? `<img src="${data.part_image}" alt="">` : ''}
+                    <span>Re: ${data.part_title || 'Part #' + partId}</span>
+                </div>
+                ${data.messages.map(m => `
+                    <div class="message ${m.sender_id === currentUser.id ? 'message-sent' : 'message-received'}">
+                        <div class="message-content">${m.content}</div>
+                        <div class="message-time">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    });
+    
+    // General messages (no part)
+    if (noPart.length) {
+        messagesHTML += noPart.map(m => `
+            <div class="message ${m.sender_id === currentUser.id ? 'message-sent' : 'message-received'}">
+                <div class="message-content">${m.content}</div>
+                <div class="message-time">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+            </div>
+        `).join('');
+    }
+    
+    if (!messagesHTML) messagesHTML = '<p class="empty-state">No messages yet. Start the conversation!</p>';
+    
     return `<div class="conversation-page">
         <div class="conversation-header">
             <a href="#" onclick="go('dashboard'); return false;" class="back-btn">← Back</a>
@@ -354,12 +401,7 @@ async function conversationView(userId) {
         </div>
         
         <div class="messages-container" id="messagesContainer">
-            ${messages.length ? messages.map(m => `
-                <div class="message ${m.sender_id === currentUser.id ? 'message-sent' : 'message-received'}">
-                    <div class="message-content">${m.content}</div>
-                    <div class="message-time">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-                </div>
-            `).join('') : '<p class="empty-state">No messages yet. Start the conversation!</p>'}
+            ${messagesHTML}
         </div>
         
         <form class="message-form" onsubmit="sendMessage(event, ${userId})">
@@ -660,8 +702,8 @@ async function handleAvatarUpload(event) {
 function homeView() {
     // ONLY show parts with valid images in public views
     const validParts = filterPublicParts(parts);
-    const premieredParts = validParts.filter(p => p.featured || p.premiered).slice(0, 4);
-    const featuredParts = validParts.filter(p => p.featured);
+    // Featured Parts = parts that are featured (paid $20 for 30 days)
+    const featuredParts = validParts.filter(p => p.featured || p.premiered).slice(0, 8);
     
     return `
         <div class="promo-banner">
@@ -683,7 +725,7 @@ function homeView() {
                 <button class="btn" onclick="doSearch()">Find Parts</button>
             </div>
             <div class="trust-badges">
-                <span class="trust-badge">$5 Flat Listing Fee</span>
+                <span class="trust-badge">$10 Flat Listing Fee</span>
                 <span class="trust-badge">Keep 100% of Sales</span>
                 <span class="trust-badge">Instant Download</span>
             </div>
@@ -693,16 +735,13 @@ function homeView() {
             <div class="cat-grid">${categories.map(c => `<a href="#" class="cat-item" onclick="filterCat='${c.name}';go('browse'); return false;"><img src="${c.img}" alt="${c.name}"><span>${c.name}</span></a>`).join('')}</div>
         </div>
 
-        ${premieredParts.length ? `<div class="section"><div class="section-head"><h2>Premiered Parts</h2><a href="#" onclick="go('browse'); return false;">View all</a></div>
-            <div class="grid">${premieredParts.map(p => cardHTML(p, true)).join('')}</div>
+        ${featuredParts.length ? `<div class="section featured-section"><div class="section-head"><h2>Featured Parts</h2><a href="#" onclick="go('browse'); return false;">View all</a></div>
+            <div class="grid">${featuredParts.map(p => cardHTML(p)).join('')}</div>
         </div>` : ''}
-
-        ${featuredParts.length ? `<div class="section featured-section"><div class="section-head"><h2>Featured Parts</h2></div>
-            <div class="grid">${featuredParts.slice(0, 4).map(p => cardHTML(p)).join('')}</div></div>` : ''}
         
         <div class="section"><div class="section-head"><h2>New Parts</h2>${validParts.length ? `<a href="#" onclick="go('browse'); return false;">View all</a>` : ''}</div>
             ${validParts.length ? `<div class="grid">${validParts.slice(0, 8).map(cardHTML).join('')}</div>` : 
-            `<div class="empty-cta"><h3>Be the first to list a part</h3><p>Start selling your 3D automotive designs today.</p><a href="#" onclick="go('sell'); return false;" class="btn btn-lg btn-primary">Create Listing - $5</a></div>`}
+            `<div class="empty-cta"><h3>Be the first to list a part</h3><p>Start selling your 3D automotive designs today.</p><a href="#" onclick="go('sell'); return false;" class="btn btn-lg btn-primary">Create Listing - $10</a></div>`}
         </div>
 
         <div class="section featured-designers"><div class="section-head"><h2>Top Designers</h2><a href="#" onclick="go('designers'); return false;">View all</a></div>
@@ -713,7 +752,7 @@ function homeView() {
             <div class="stat"><span class="stat-num">${validParts.length}</span><span class="stat-label">${validParts.length === 1 ? 'Part' : 'Parts'} Listed</span></div>
             <div class="stat"><span class="stat-num">${demoDesigners.length}</span><span class="stat-label">${demoDesigners.length === 1 ? 'Designer' : 'Designers'}</span></div>
             <div class="stat"><span class="stat-num">${carMakes.length - 1}</span><span class="stat-label">Car Brands</span></div>
-            <div class="stat"><span class="stat-num">$5</span><span class="stat-label">Flat Fee</span></div>
+            <div class="stat"><span class="stat-num">$10</span><span class="stat-label">Flat Fee</span></div>
         </div>
         <div class="version-tag">v${VERSION}</div>
     `;
@@ -773,8 +812,8 @@ function sellView() {
     
     return `<div class="sell-layout">
         <div class="sell-info"><h1>Sell your car parts</h1><p>Upload your designs, set your price, start earning.</p>
-            <div class="steps"><div class="step"><div class="step-num">1</div><div><h4>Upload files</h4><p>3D files + photos</p></div></div><div class="step"><div class="step-num">2</div><div><h4>Pay listing fee</h4><p>One-time $5</p></div></div><div class="step"><div class="step-num">3</div><div><h4>Get paid</h4><p>Keep 100%</p></div></div></div>
-            <div class="pricing"><div class="pricing-big">$5</div><div class="pricing-sub">one-time listing fee</div><ul><li>Keep 100% of sales</li><li>No monthly fees</li><li>No commission</li><li>Listing never expires</li></ul></div>
+            <div class="steps"><div class="step"><div class="step-num">1</div><div><h4>Upload files</h4><p>3D files + photos</p></div></div><div class="step"><div class="step-num">2</div><div><h4>Pay listing fee</h4><p>One-time $10</p></div></div><div class="step"><div class="step-num">3</div><div><h4>Get paid</h4><p>Keep 100%</p></div></div></div>
+            <div class="pricing"><div class="pricing-big">$10</div><div class="pricing-sub">one-time listing fee</div><ul><li>Keep 100% of sales</li><li>No monthly fees</li><li>No commission</li><li>Listing never expires</li></ul></div>
         </div>
         <div class="form"><h2>Create Listing</h2>
             <form onsubmit="handleCreateListing(event)">
@@ -787,7 +826,7 @@ function sellView() {
             <div class="field"><label>3D File</label><div class="dropzone" onclick="document.getElementById('fileInput').click()"><div class="dropzone-icon">+</div><p id="fileName">Drop 3D file here or click</p><span>STL, STEP, OBJ, 3MF</span></div><input type="file" id="fileInput" hidden onchange="handleFileSelect(event)"></div>
             <div class="field"><label>Photos <span class="required-star">*</span> (First photo = thumbnail)</label><div class="photo-grid" id="photoGrid"><div class="photo-add" onclick="document.getElementById('photoInput').click()"><span class="photo-add-icon">+</span><span>Add</span></div></div><input type="file" id="photoInput" accept="image/*" multiple hidden onchange="handlePhotoUpload(event)"><p class="field-hint">At least 1 photo required</p></div>
             <div class="upsell-box"><label class="upsell-label"><input type="checkbox" id="featuredCheckbox" onchange="updateTotal()"><div class="upsell-content"><span class="upsell-badge">FEATURED</span><strong>Get Featured Placement +$20</strong><p>Your listing appears in the Featured section for 30 days.</p></div></label></div>
-            <div class="form-total"><span>Total</span><span id="totalPrice">$5.00</span></div>
+            <div class="form-total"><span>Total</span><span id="totalPrice">$10.00</span></div>
             <button type="submit" class="btn btn-lg btn-primary" style="width:100%">Create Listing</button>
             </form>
         </div>
@@ -946,7 +985,7 @@ async function handleCreateListing(e) {
     }
 }
 
-function updateTotal() { document.getElementById('totalPrice').textContent = document.getElementById('featuredCheckbox')?.checked ? '$25.00' : '$5.00'; }
+function updateTotal() { document.getElementById('totalPrice').textContent = document.getElementById('featuredCheckbox')?.checked ? '$30.00' : '$10.00'; }
 
 // FIX 7: Image editing support
 let editImagesToRemove = [];
@@ -1142,12 +1181,12 @@ async function partView(id) {
             <h1>${p.title}</h1>
             <div class="detail-seller"><span class="seller-avatar">${(p.seller_name||'S').charAt(0)}</span><span>by <strong>${p.seller_name || 'Seller'}</strong></span><span class="detail-downloads">${p.downloads || 0} downloads</span></div>
             <div class="detail-price">$${(p.price || 0).toFixed(2)}</div>
-            <div class="detail-trust"><span>Secure Payment</span><span>Instant Download</span><span>$5 Listing Fee</span></div>
+            <div class="detail-trust"><span>Secure Payment</span><span>Instant Download</span><span>$10 Listing Fee</span></div>
             <div class="detail-actions">
                 ${p.purchased || (currentUser && currentUser.id === p.user_id) ? 
                     `<a href="${p.file_url}" download class="btn btn-lg btn-primary">Download File</a>` :
                     `<button class="btn btn-lg btn-primary" onclick="handleBuyPart(${p.id})">Buy Now - $${(p.price || 0).toFixed(2)}</button>`}
-                <button class="btn btn-lg btn-outline" onclick="openContactModal(${p.user_id}, '${(p.seller_name || 'Seller').replace(/'/g, "\\'")}', '${(p.title || '').replace(/'/g, "\\'")}')">Contact Seller</button>
+                <button class="btn btn-lg btn-outline" onclick="openContactModal(${p.user_id}, '${(p.seller_name || 'Seller').replace(/'/g, "\\'")}', '${(p.title || '').replace(/'/g, "\\'")}', ${p.id}, '${(p.images && p.images[0] || '').replace(/'/g, "\\'")}')">Contact Seller</button>
             </div>
             ${currentUser && currentUser.id === p.user_id ? `
             <div class="owner-actions">
@@ -1158,11 +1197,11 @@ async function partView(id) {
             <div class="boost-cta">
                 <div class="boost-header">
                     <strong>Boost Your Listing</strong>
-                    <span>Get more visibility in the Premiered section</span>
+                    <span>Get more visibility in the Featured section</span>
                 </div>
-                <button class="btn btn-boost" onclick="handleBoostPart(${p.id})">Boost to Premier - $20</button>
+                <button class="btn btn-boost" onclick="handleBoostPart(${p.id})">Make Featured - $20</button>
             </div>` : ''}
-            ${p.premiered ? '<div class="premiered-status">This listing is Premiered until ' + new Date(p.premiered_until).toLocaleDateString() + '</div>' : ''}
+            ${p.premiered ? '<div class="featured-status">This listing is Featured until ' + new Date(p.premiered_until).toLocaleDateString() + '</div>' : ''}
             <div class="print-ship-cta"><div class="print-ship-header"><div><strong>Print & Ship</strong><span>Don't have a printer? We'll print and ship it to you.</span></div></div><div class="print-ship-options"><button class="btn btn-sm" onclick="go('printshops', ${p.id})">Find Local Shop</button><button class="btn btn-sm btn-primary" onclick="alert('Print & Ship coming soon!')">Get Instant Quote</button></div></div>
             <div class="detail-desc"><h2>Description</h2><p>${p.description || ''}</p></div>
             <div class="specs"><h2>Specifications</h2><div class="spec-row"><span>Vehicle</span><span>${p.make} ${p.model}</span></div><div class="spec-row"><span>Category</span><span>${p.category}</span></div><div class="spec-row"><span>Format</span><span>${p.file_format || 'STL'}</span></div><div class="spec-row"><span>File Size</span><span>${p.file_size || 'N/A'}</span></div><div class="spec-row"><span>Material</span><span>${p.material || 'PLA'}</span></div><div class="spec-row"><span>Infill</span><span>${p.infill || '25%'}</span></div></div>
@@ -1191,13 +1230,13 @@ async function handleBuyPart(partId) {
 async function handleBoostPart(partId) {
     if (!currentUser) { alert('Please login first'); go('login'); return; }
     
-    if (!confirm('Boost this listing to Premier for $20?\n\nYour part will appear in the Premiered section for 30 days.')) {
+    if (!confirm('Make this listing Featured for $20?\n\nYour part will appear in the Featured section for 30 days, then returns to a regular listing.')) {
         return;
     }
     
     try {
         await api(`/api/parts/${partId}/boost`, { method: 'POST' });
-        alert('Listing boosted! Your part will now appear in the Premiered section for 30 days. (Payment via Stripe coming soon)');
+        alert('Listing boosted! Your part will now appear in the Featured section for 30 days. (Payment via Stripe coming soon)');
         go('part', partId);
     } catch (err) {
         alert('Error: ' + err.message);
@@ -1390,12 +1429,12 @@ function renderPhotoGrid() { const grid = document.getElementById('photoGrid'); 
 function removePhoto(index) { uploadedPhotos.splice(index, 1); uploadedPhotoFiles.splice(index, 1); renderPhotoGrid(); }
 function useMyLocation() { if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(pos => { document.getElementById('locationInput').value = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`; }); } }
 
-// Contact Seller Modal
-function openContactModal(sellerId, sellerName, partTitle) {
+// Contact Seller Modal - shows product info
+function openContactModal(sellerId, sellerName, partTitle, partId, partImage) {
     if (!currentUser) { alert('Please login to contact sellers'); go('login'); return; }
     if (currentUser.id === sellerId) { alert('This is your own listing'); return; }
     
-    // Create modal
+    // Create modal with product preview
     const modal = document.createElement('div');
     modal.id = 'contactModal';
     modal.className = 'modal-overlay';
@@ -1403,8 +1442,14 @@ function openContactModal(sellerId, sellerName, partTitle) {
         <div class="modal-box">
             <button class="modal-close" onclick="closeContactModal()">×</button>
             <h2>Contact Seller</h2>
-            <p class="modal-sub">Message <strong>${sellerName}</strong> about "${partTitle}"</p>
-            <form onsubmit="sendContactMessage(event, ${sellerId}, '${partTitle.replace(/'/g, "\\'")}')">
+            <div class="contact-product-preview">
+                ${partImage ? `<img src="${partImage}" alt="${partTitle}">` : ''}
+                <div class="contact-product-info">
+                    <strong>${partTitle}</strong>
+                    <span>Seller: ${sellerName}</span>
+                </div>
+            </div>
+            <form onsubmit="sendContactMessage(event, ${sellerId}, '${partTitle.replace(/'/g, "\\'")}', ${partId || 'null'})">
                 <div class="field">
                     <label>Your Message</label>
                     <textarea id="contactMessage" rows="4" placeholder="Hi, I have a question about this part..." required></textarea>
@@ -1424,7 +1469,7 @@ function closeContactModal() {
     if (modal) modal.remove();
 }
 
-async function sendContactMessage(e, sellerId, partTitle) {
+async function sendContactMessage(e, sellerId, partTitle, partId) {
     e.preventDefault();
     const content = document.getElementById('contactMessage').value.trim();
     if (!content) return;
@@ -1438,13 +1483,14 @@ async function sendContactMessage(e, sellerId, partTitle) {
             method: 'POST',
             body: JSON.stringify({ 
                 recipient_id: sellerId, 
-                content: `[Re: ${partTitle}]\n\n${content}`,
-                notify_email: true  // Request email relay
+                content: content,
+                part_id: partId,
+                part_title: partTitle,
+                notify_email: true
             })
         });
         closeContactModal();
-        alert('Message sent! The seller will also be notified by email.');
-        // Optionally go to conversation
+        alert('Message sent! The seller will be notified by email.');
         go('conversation', sellerId);
     } catch (err) {
         alert('Error: ' + err.message);
