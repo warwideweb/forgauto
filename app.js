@@ -67,12 +67,15 @@ async function updateNavAuth() {
         const avatarUrl = currentUser.avatar_url;
         const initial = name.charAt(0).toUpperCase();
         
+        loginBtn.className = 'nav-user-btn'; // Remove btn-outline class
         loginBtn.innerHTML = `<span class="nav-user-wrap">
             <span class="nav-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="${name}">` : initial}</span>
             ${unreadCount > 0 ? `<span class="nav-badge-top">${unreadCount > 9 ? '9+' : unreadCount}</span>` : ''}
+            <span class="nav-username">${name}</span>
         </span>`;
         loginBtn.onclick = () => go('dashboard');
     } else {
+        loginBtn.className = 'btn btn-outline';
         loginBtn.textContent = 'Login';
         loginBtn.onclick = () => go('login');
     }

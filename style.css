@@ -63,7 +63,7 @@ nav {
 .btn-lg { padding: 14px 32px; font-size: 15px; }
 .btn-sm { padding: 8px 14px; font-size: 13px; }
 
-main { max-width: 1200px; margin: 0 auto; padding: 0 32px 60px; }
+main { max-width: 1200px; margin: 0 auto; padding: 0 16px 40px; }
 
 /* Sold Ticker */
 .sold-ticker {
@@ -4649,12 +4649,21 @@ body.dark .download-email-notice {
 
 /* v7.2: Badge on top, wider listings, pagination, pay at shop */
 
-/* Nav user avatar circle with badge */
+/* Nav user button - no border/background */
+.nav-user-btn {
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    cursor: pointer;
+    text-decoration: none;
+}
+
 .nav-user-wrap {
     position: relative;
-    display: inline-flex;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    gap: 4px;
 }
 
 .nav-avatar {
@@ -4677,6 +4686,16 @@ body.dark .download-email-notice {
     object-fit: cover;
 }
 
+.nav-username {
+    font-size: 11px;
+    color: var(--text);
+    font-weight: 500;
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .nav-badge-top {
     position: absolute;
     top: -8px;
@@ -4695,11 +4714,11 @@ body.dark .download-email-notice {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* Full-width browse page - FIXED v7.2.2 */
+/* Full-width browse page - FIXED v7.2.5 */
 main.browse-fullwidth-active {
     max-width: 100% !important;
-    padding-left: 32px !important;
-    padding-right: 32px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
 }
 
 .browse.browse-fullwidth {
@@ -4717,36 +4736,22 @@ main.browse-fullwidth-active {
 .browse-fullwidth .grid,
 .browse-fullwidth .grid-wide {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
 }
 
-@media (min-width: 1400px) {
-    .browse-fullwidth .grid,
-    .browse-fullwidth .grid-wide {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-@media (min-width: 1800px) {
-    .browse-fullwidth .grid,
-    .browse-fullwidth .grid-wide {
-        grid-template-columns: repeat(5, 1fr);
-    }
-}
-
-@media (max-width: 900px) {
+@media (max-width: 700px) {
     .browse-fullwidth .grid,
     .browse-fullwidth .grid-wide {
         grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 500px) {
     .browse-fullwidth .grid,
     .browse-fullwidth .grid-wide {
         grid-template-columns: 1fr;
-        gap: 16px;
     }
 }
 
