@@ -3087,7 +3087,7 @@ async function printShopsView(partId) {
             <div class="no-shops-cta">
                 <h3>No print shops yet</h3>
                 <p>Are you a 3D printing service? Be the first to register!</p>
-                <a href="#" onclick="goToShopSignup(); return false;" class="btn btn-primary">Register as a Print Shop</a>
+                <a href="#" onclick="goToShopSignup(); return false;" class="btn btn-primary" style="color: white;">Register as a Print Shop</a>
             </div>
         ` : `
             <div class="print-shops-grid">
