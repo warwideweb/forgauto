@@ -157,12 +157,12 @@ async function api(endpoint, options = {}) {
 
 // Static data for demo (will be replaced by API)
 const categories = [
-    { name: "Interior", img: "images/categories/interior.jpg" },
-    { name: "Exterior", img: "images/categories/exterior.jpg" },
-    { name: "Gauges", img: "images/categories/gauges.jpg" },
-    { name: "Accessories", img: "images/categories/accessories.jpg" },
-    { name: "Performance", img: "images/categories/performance.jpg" },
-    { name: "Lighting", img: "images/categories/lighting.jpg" }
+    { name: "Interior", img: "images/categories/interior.jpg?v=2" },
+    { name: "Exterior", img: "images/categories/exterior.jpg?v=2" },
+    { name: "Gauges", img: "images/categories/gauges.jpg?v=2" },
+    { name: "Accessories", img: "images/categories/accessories.jpg?v=2" },
+    { name: "Performance", img: "images/categories/performance.jpg?v=2" },
+    { name: "Lighting", img: "images/categories/lighting.jpg?v=2" }
 ];
 
 const carMakes = [
