@@ -2319,3 +2319,26 @@ body.dark .download-email-notice {
         grid-template-columns: 1fr;
     }
 }
+
+/* v5.3: Multiple 3D file buttons */
+.thumb-3d {
+    padding: 8px 12px;
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.thumb-3d:hover {
+    border-color: var(--primary);
+}
+
+.thumb-3d.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}

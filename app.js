@@ -1,7 +1,7 @@
 // ForgAuto — 3D Marketplace for Cars
 // Version 4.0 - Major Fixes
 
-const VERSION = '5.2';
+const VERSION = '5.3';
 const API_URL = 'https://forgauto-api.warwideweb.workers.dev'; // Cloudflare Worker API
 
 // State
@@ -1284,7 +1284,8 @@ async function partView(id) {
             <div class="detail-gallery">
                 <div class="viewer-container" id="viewer3d"></div>
                 <div class="gallery-thumbs">
-                    ${hasFile ? `<button class="thumb-3d active" onclick="show3DViewer()">3D</button>` : ''}
+                    ${hasFile ? `<button class="thumb-3d active" onclick="show3DViewer(0)" data-file-index="0">3D${p.file_urls && p.file_urls.length > 1 ? ' 1' : ''}</button>` : ''}
+                    ${p.file_urls && p.file_urls.length > 1 ? p.file_urls.slice(1).map((f, i) => `<button class="thumb-3d" onclick="show3DViewer(${i+1})" data-file-index="${i+1}">3D ${i+2}</button>`).join('') : ''}
                     ${images.map((img, i) => `<img src="${img}" alt="${p.title}" class="thumb" onclick="showGalleryImage('${img}', this)">`).join('')}
                 </div>
             </div>
@@ -1716,7 +1717,65 @@ function updateCharCount(inputId, counterId, maxLen) {
     }
 }
 
-function handlePhotoUpload(event) { for (let file of event.target.files) { if (uploadedPhotos.length >= 10) break; uploadedPhotoFiles.push(file); const reader = new FileReader(); reader.onload = e => { uploadedPhotos.push(e.target.result); renderPhotoGrid(); }; reader.readAsDataURL(file); } }
+// v5.3: Compress images before upload (max 1200px, 80% quality)
+async function compressImage(file, maxWidth = 1200, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                // Calculate new dimensions
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+                
+                // Create canvas and draw resized image
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert to blob with compression
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        // Create new file with original name
+                        const compressedFile = new File([blob], file.name, { type: 'image/jpeg' });
+                        console.log(`Compressed: ${(file.size/1024).toFixed(0)}KB → ${(blob.size/1024).toFixed(0)}KB`);
+                        resolve(compressedFile);
+                    } else {
+                        resolve(file); // Fallback to original
+                    }
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = () => resolve(file); // Fallback on error
+            img.src = e.target.result;
+        };
+        reader.onerror = () => resolve(file);
+        reader.readAsDataURL(file);
+    });
+}
+
+async function handlePhotoUpload(event) {
+    for (let file of event.target.files) {
+        if (uploadedPhotos.length >= 10) break;
+        
+        // v5.3: Compress image before adding
+        const compressedFile = await compressImage(file);
+        uploadedPhotoFiles.push(compressedFile);
+        
+        const reader = new FileReader();
+        reader.onload = e => {
+            uploadedPhotos.push(e.target.result);
+            renderPhotoGrid();
+        };
+        reader.readAsDataURL(compressedFile);
+    }
+}
 function renderPhotoGrid() { const grid = document.getElementById('photoGrid'); if (!grid) return; grid.innerHTML = uploadedPhotos.map((photo, i) => `<div class="photo-item"><img src="${photo}"><button class="photo-remove" onclick="removePhoto(${i})">x</button></div>`).join('') + (uploadedPhotos.length < 10 ? `<div class="photo-add" onclick="document.getElementById('photoInput').click()"><span class="photo-add-icon">+</span><span>Add</span></div>` : ''); }
 function removePhoto(index) { uploadedPhotos.splice(index, 1); uploadedPhotoFiles.splice(index, 1); renderPhotoGrid(); }
 function useMyLocation() { if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(pos => { document.getElementById('locationInput').value = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`; }); } }
@@ -1795,7 +1854,13 @@ async function sendContactMessage(e, sellerId, partTitle, partId) {
 let currentPartData = null;
 let viewerInstance = null;
 
-function initViewer(partId) {
+// v5.3: Initialize viewer with specific file URL (for package file switching)
+function initViewerWithUrl(fileUrl, partData) {
+    // Call initViewer with -1 as partId and pass fileUrl override
+    initViewer(-1, fileUrl);
+}
+
+function initViewer(partId, overrideFileUrl = null) {
     const container = document.getElementById('viewer3d');
     if (!container) return;
     
@@ -1814,7 +1879,8 @@ function initViewer(partId) {
         return;
     }
     
-    const fileUrl = p.file_url;
+    // v5.3: Use override URL if provided (for file switching)
+    const fileUrl = overrideFileUrl || p.file_url;
     if (!fileUrl) {
         const img = (p.images && p.images[0]) ? p.images[0] : null;
         if (img) {
@@ -2077,13 +2143,26 @@ function addViewerToolbar(container, controls, mesh, renderer, scene, camera) {
 }
 
 // FIX 13: Gallery functions for switching between 3D and images
-function show3DViewer() {
+// v5.3: Show 3D viewer with specific file from package
+function show3DViewer(fileIndex = 0) {
     document.querySelectorAll('.thumb, .thumb-3d').forEach(t => t.classList.remove('active'));
-    document.querySelector('.thumb-3d')?.classList.add('active');
+    // Activate the correct 3D button
+    const btn = document.querySelector(`.thumb-3d[data-file-index="${fileIndex}"]`);
+    if (btn) btn.classList.add('active');
+    
     const viewer = document.getElementById('viewer3d');
     if (viewer) viewer.style.display = 'block';
     const heroImg = document.getElementById('galleryHeroImage');
     if (heroImg) heroImg.style.display = 'none';
+    
+    // v5.3: Load specific file from package
+    if (currentPartData) {
+        let fileUrl = currentPartData.file_url;
+        if (currentPartData.file_urls && currentPartData.file_urls.length > fileIndex) {
+            fileUrl = currentPartData.file_urls[fileIndex].url;
+        }
+        initViewerWithUrl(fileUrl, currentPartData);
+    }
 }
 
 function showGalleryImage(src, el) {
