@@ -56,6 +56,7 @@ async function checkAuth() {
             if (res.ok) {
                 const data = await res.json();
                 currentUser = data.user;
+                isAuthChecking = false; // Stop showing loading spinner
                 updateNavAuth();
                 go('dashboard');
                 return;
